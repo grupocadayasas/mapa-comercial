@@ -97,9 +97,7 @@ html,body{
     color:#111;
 }
 
-.titulo-login span{
-    color:#d90000;
-}
+.titulo-login span{color:#d90000;}
 
 .titulo-login::before,
 .titulo-login::after{
@@ -165,7 +163,6 @@ html,body{
     height:100%;
 }
 
-/* PANEL */
 #panel{
     width:380px;
     min-width:380px;
@@ -188,13 +185,18 @@ html,body{
     max-width:310px;
 }
 
-.contenido-panel{
-    padding:20px 22px;
+#textoUsuario{
+    margin-top:12px;
+    font-size:13px;
+    color:#555;
+    line-height:1.4;
 }
 
-.seccion{
-    margin-bottom:24px;
-}
+#textoUsuario strong{color:#d90000;}
+
+.contenido-panel{padding:20px 22px;}
+
+.seccion{margin-bottom:24px;}
 
 .titulo-seccion{
     display:flex;
@@ -275,9 +277,7 @@ html,body{
     border-bottom:1px solid #f0f0f0;
 }
 
-.item-lista:last-child{
-    border-bottom:none;
-}
+.item-lista:last-child{border-bottom:none;}
 
 .item-nombre{
     display:flex;
@@ -304,7 +304,6 @@ html,body{
     height:100vh;
 }
 
-/* MÓVIL */
 #btnMenu{
     display:none;
     position:fixed;
@@ -334,16 +333,13 @@ html,body{
     font-weight:bold;
 }
 
-.leaflet-popup-content{
-    min-width:260px;
-}
+.leaflet-popup-content{min-width:260px;}
 
 ::-webkit-scrollbar{width:8px}
 ::-webkit-scrollbar-thumb{background:#b7b7b7;border-radius:4px}
 ::-webkit-scrollbar-track{background:#f1f1f1}
 
 @media (max-width:768px){
-
     #contenedor{display:block}
 
     #panel{
@@ -362,12 +358,9 @@ html,body{
     }
 
     #btnMenu{display:block}
-
     #cerrarPanel{display:block}
 
-    .login-card{
-        padding:25px;
-    }
+    .login-card{padding:25px;}
 
     .titulo-login{
         font-size:20px;
@@ -375,13 +368,10 @@ html,body{
     }
 
     .titulo-login::before,
-    .titulo-login::after{
-        width:35px;
-    }
+    .titulo-login::after{width:35px;}
 }
 
 @media (max-width:420px){
-
     #panel{
         width:340px;
         min-width:340px;
@@ -427,6 +417,7 @@ html,body{
             <div class="encabezado">
                 <button id="cerrarPanel" onclick="cerrarPanel()">Cerrar panel</button>
                 <img src="logo_cadaya.png" class="logo-panel-img" alt="GRUPO CADAYA">
+                <div id="textoUsuario"></div>
             </div>
 
             <div class="contenido-panel">
@@ -464,7 +455,7 @@ html,body{
                         <div class="card-numero" id="clientesVisibles">0</div>
                     </div>
 
-                    <div class="card">
+                    <div class="card" id="cardTotalVendedores">
                         <div class="card-label"><div class="icono-card rojo">P</div>Vendedores</div>
                         <div class="card-numero" id="totalVendedores">0</div>
                     </div>
@@ -485,7 +476,7 @@ html,body{
                     <div id="estadisticasZona"></div>
                 </div>
 
-                <div class="seccion">
+                <div class="seccion" id="seccionVendedores">
                     <div class="titulo-seccion">👤 Clientes por Vendedor</div>
                     <div id="estadisticasVendedores"></div>
                 </div>
@@ -501,34 +492,6 @@ html,body{
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="app.js"></script>
-
-<script>
-function iniciarSesion(){
-    const usuario = document.getElementById("usuario").value.trim();
-    const clave = document.getElementById("clave").value.trim();
-
-    if(usuario === "cadaya" && clave === "cadaya2026"){
-        document.getElementById("login").style.display = "none";
-        document.getElementById("app").style.display = "block";
-
-        setTimeout(function(){
-            if(window.map){
-                window.map.invalidateSize();
-            }
-        },300);
-    }else{
-        document.getElementById("errorLogin").style.display = "block";
-    }
-}
-
-function abrirPanel(){
-    document.getElementById("panel").classList.add("activo");
-}
-
-function cerrarPanel(){
-    document.getElementById("panel").classList.remove("activo");
-}
-</script>
 
 </body>
 </html>

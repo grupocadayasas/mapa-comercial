@@ -1,30 +1,40 @@
 window.map = L.map('map').setView([3.4516, -76.5320], 11);
 var map = window.map;
 
-L.tileLayer(
-    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
-    }
-).addTo(map);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+}).addTo(map);
 
 var markers = L.markerClusterGroup();
 var clientes = [];
+var usuarioActual = null;
 
-var colores = [
-    "#1976D2", "#D32F2F", "#22B14C", "#F57C00",
-    "#8E24AA", "#0097A7", "#5D4037"
+var usuarios = [
+    { usuario:"L.Arana", clave:"C@daya", rol:"vendedor", vendedor:"ARANA LOPEZ LIZETH ASTRID" },
+    { usuario:"L.Arenas", clave:"C4d4y4", rol:"vendedor", vendedor:"ARENAS ALZATE LAUREN DANIEL" },
+    { usuario:"C.Potes", clave:"C4d@y4", rol:"vendedor", vendedor:"POTES LOZANO CAMILO ANDRES" },
+    { usuario:"M.Sanchez", clave:"C@d@y@", rol:"vendedor", vendedor:"SANCHEZ CASTANEDA MARIA LIZANA" },
+    { usuario:"L.Tamayo", clave:"C@d4y@", rol:"vendedor", vendedor:"TAMAYO LOPEZ ELIZABETH" },
+    { usuario:"L.Zuniga", clave:"C@d@y4", rol:"vendedor", vendedor:"ZUNIGA HERRERA LUISA MARIA" },
+    { usuario:"D.Fajardo", clave:"Himoura*521", rol:"admin", vendedor:"TODOS" },
+    { usuario:"L.Rojas", clave:"Cadaya.2026", rol:"admin", vendedor:"TODOS" }
 ];
 
+var colores = ["#1976D2","#D32F2F","#22B14C","#F57C00","#8E24AA","#0097A7","#5D4037"];
 var coloresVendedor = {};
 
+var coloresZona = {
+    "Norte": "#1976D2",
+    "Centro": "#22B14C",
+    "Oriente": "#F57C00",
+    "Sur": "#8E24AA",
+    "Ladera/Oeste": "#0097A7",
+    "Sin Zona": "#999999"
+};
+
 function normalizar(texto){
-    return String(texto || "")
-        .trim()
-        .toUpperCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
+    return String(texto || "").trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function obtenerZona(comuna){
@@ -37,29 +47,66 @@ function obtenerZona(comuna){
     return "Sin Zona";
 }
 
-var coloresZona = {
-    "Norte": "#1976D2",
-    "Centro": "#22B14C",
-    "Oriente": "#F57C00",
-    "Sur": "#8E24AA",
-    "Ladera/Oeste": "#0097A7",
-    "Sin Zona": "#999999"
-};
+function iniciarSesion(){
+    let usuario = document.getElementById("usuario").value.trim();
+    let clave = document.getElementById("clave").value.trim();
+
+    let encontrado = usuarios.find(u => u.usuario === usuario && u.clave === clave);
+
+    if(!encontrado){
+        document.getElementById("errorLogin").style.display = "block";
+        return;
+    }
+
+    usuarioActual = encontrado;
+
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display = "block";
+
+    configurarPerfil();
+    aplicarFiltros();
+
+    setTimeout(function(){
+        map.invalidateSize();
+    }, 300);
+}
+
+window.iniciarSesion = iniciarSesion;
+
+setTimeout(function(){
+    window.iniciarSesion = iniciarSesion;
+}, 100);
+
+function configurarPerfil(){
+    let filtroVendedor = document.getElementById("filtroVendedor");
+
+    if(usuarioActual.rol === "vendedor"){
+        filtroVendedor.value = usuarioActual.vendedor;
+        filtroVendedor.style.display = "none";
+
+        let seccionVendedores = document.getElementById("estadisticasVendedores").closest(".seccion");
+        if(seccionVendedores){
+            seccionVendedores.style.display = "none";
+        }
+    }else{
+        filtroVendedor.style.display = "block";
+
+        let seccionVendedores = document.getElementById("estadisticasVendedores").closest(".seccion");
+        if(seccionVendedores){
+            seccionVendedores.style.display = "block";
+        }
+    }
+}
 
 fetch('clientes_cali.csv')
 .then(r => r.text())
 .then(text => {
-
     let filas = text.split('\n');
     let vendedores = new Set();
-    let barrios = new Set();
-    let comunas = new Set();
 
-    for (let i = 1; i < filas.length; i++) {
-
+    for(let i = 1; i < filas.length; i++){
         let cols = filas[i].split(';');
-
-        if (cols.length < 14) continue;
+        if(cols.length < 14) continue;
 
         let vendedor = cols[0].trim();
 
@@ -76,35 +123,29 @@ fetch('clientes_cali.csv')
             lon: parseFloat(cols[13])
         };
 
-        if (isNaN(cliente.lat) || isNaN(cliente.lon)) continue;
+        if(isNaN(cliente.lat) || isNaN(cliente.lon)) continue;
 
-        if (!coloresVendedor[vendedor]) {
+        if(!coloresVendedor[vendedor]){
             let indice = Object.keys(coloresVendedor).length;
             coloresVendedor[vendedor] = colores[indice % colores.length];
         }
 
         let icono = L.divIcon({
             className: '',
-            html: `
-                <div style="
-                    width:14px;
-                    height:14px;
-                    border-radius:50%;
-                    border:2px solid white;
-                    background:${coloresVendedor[vendedor]};
-                    box-shadow:0 0 3px #000;">
-                </div>
-            `,
-            iconSize: [18, 18]
+            html: `<div style="
+                width:14px;height:14px;border-radius:50%;
+                border:2px solid white;
+                background:${coloresVendedor[vendedor]};
+                box-shadow:0 0 3px #000;">
+            </div>`,
+            iconSize: [18,18]
         });
 
         let marker = L.marker([cliente.lat, cliente.lon], { icon: icono });
 
         marker.bindPopup(`
             <div style="font-family:Arial,Helvetica,sans-serif;">
-                <h3 style="margin:0 0 10px 0;color:#d90000;">
-                    ${cliente.cliente}
-                </h3>
+                <h3 style="margin:0 0 10px 0;color:#d90000;">${cliente.cliente}</h3>
                 <b>Vendedor:</b> ${cliente.vendedor}<br>
                 <b>Zona:</b> ${cliente.zona}<br>
                 <b>Comuna:</b> ${cliente.comuna}<br>
@@ -117,24 +158,23 @@ fetch('clientes_cali.csv')
 
         cliente.marker = marker;
         clientes.push(cliente);
-
         vendedores.add(vendedor);
-        barrios.add(cliente.barrio);
-        comunas.add(cliente.comuna);
     }
-
-    document.getElementById('totalClientes').innerText = clientes.length;
-    document.getElementById('totalVendedores').innerText = vendedores.size;
-    document.getElementById('totalBarrios').innerText = barrios.size;
-    document.getElementById('totalComunas').innerText = comunas.size;
 
     cargarFiltroVendedores(vendedores);
     cargarBuscador();
     aplicarFiltros();
 });
 
-function cargarFiltroVendedores(vendedores){
+function clientesPermitidos(){
+    if(!usuarioActual || usuarioActual.rol === "admin"){
+        return clientes;
+    }
 
+    return clientes.filter(c => c.vendedor === usuarioActual.vendedor);
+}
+
+function cargarFiltroVendedores(vendedores){
     let combo = document.getElementById('filtroVendedor');
 
     [...vendedores].sort().forEach(v => {
@@ -149,20 +189,22 @@ function cargarFiltroVendedores(vendedores){
 }
 
 function aplicarFiltros(){
-
     let vendedor = document.getElementById('filtroVendedor').value;
     let zona = document.getElementById('filtroZona').value;
 
     markers.clearLayers();
 
+    let base = clientesPermitidos();
     let visibles = [];
 
-    clientes.forEach(c => {
+    base.forEach(c => {
+        let cumpleVendedor = usuarioActual && usuarioActual.rol === "vendedor"
+            ? c.vendedor === usuarioActual.vendedor
+            : vendedor === "" || c.vendedor === vendedor;
 
-        let cumpleVendedor = vendedor === "" || c.vendedor === vendedor;
         let cumpleZona = zona === "" || c.zona === zona;
 
-        if (cumpleVendedor && cumpleZona) {
+        if(cumpleVendedor && cumpleZona){
             markers.addLayer(c.marker);
             visibles.push(c);
         }
@@ -170,16 +212,29 @@ function aplicarFiltros(){
 
     map.addLayer(markers);
 
-    if (markers.getLayers().length > 0) {
+    if(markers.getLayers().length > 0){
         map.fitBounds(markers.getBounds());
     }
 
-    actualizarDashboard(visibles);
+    actualizarDashboard(base, visibles);
 }
 
-function actualizarDashboard(visibles){
+function actualizarDashboard(base, visibles){
+    let vendedoresBase = new Set();
+    let barriosBase = new Set();
+    let comunasBase = new Set();
 
+    base.forEach(c => {
+        vendedoresBase.add(c.vendedor);
+        barriosBase.add(c.barrio);
+        comunasBase.add(c.comuna);
+    });
+
+    document.getElementById('totalClientes').innerText = base.length;
     document.getElementById('clientesVisibles').innerText = visibles.length;
+    document.getElementById('totalVendedores').innerText = vendedoresBase.size;
+    document.getElementById('totalBarrios').innerText = barriosBase.size;
+    document.getElementById('totalComunas').innerText = comunasBase.size;
 
     let zonas = {};
     let vendedores = {};
@@ -194,12 +249,11 @@ function actualizarDashboard(visibles){
 }
 
 function actualizarZonas(zonas){
-
-    let orden = ["Norte", "Centro", "Oriente", "Sur", "Ladera/Oeste", "Sin Zona"];
-    let html = '';
+    let orden = ["Norte","Centro","Oriente","Sur","Ladera/Oeste","Sin Zona"];
+    let html = "";
 
     orden.forEach(z => {
-        if (!zonas[z]) return;
+        if(!zonas[z]) return;
 
         html += `
             <div class="item-lista">
@@ -216,8 +270,7 @@ function actualizarZonas(zonas){
 }
 
 function actualizarVendedores(vendedores){
-
-    let html = '';
+    let html = "";
 
     Object.keys(vendedores).sort().forEach(v => {
         html += `
@@ -235,7 +288,6 @@ function actualizarVendedores(vendedores){
 }
 
 function cargarBuscador(){
-
     let lista = document.getElementById('listaClientes');
     lista.innerHTML = "";
 
@@ -249,27 +301,22 @@ function cargarBuscador(){
 
     input.addEventListener('change', buscarCliente);
     input.addEventListener('keydown', function(e){
-        if(e.key === "Enter"){
-            buscarCliente();
-        }
+        if(e.key === "Enter") buscarCliente();
     });
 }
 
 function buscarCliente(){
-
     let textoOriginal = document.getElementById('buscarCliente').value;
     let texto = normalizar(textoOriginal);
 
     if(texto === "") return;
 
-    let cliente = clientes.find(c =>
-        normalizar(c.cliente) === texto
-    );
+    let base = clientesPermitidos();
+
+    let cliente = base.find(c => normalizar(c.cliente) === texto);
 
     if(!cliente){
-        cliente = clientes.find(c =>
-            normalizar(c.cliente).includes(texto)
-        );
+        cliente = base.find(c => normalizar(c.cliente).includes(texto));
     }
 
     if(!cliente){
@@ -277,7 +324,10 @@ function buscarCliente(){
         return;
     }
 
-    document.getElementById('filtroVendedor').value = "";
+    if(usuarioActual && usuarioActual.rol === "admin"){
+        document.getElementById('filtroVendedor').value = "";
+    }
+
     document.getElementById('filtroZona').value = "";
 
     aplicarFiltros();
