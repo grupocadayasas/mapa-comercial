@@ -10,35 +10,30 @@ L.tileLayer(
 ).addTo(map);
 
 var markers = L.markerClusterGroup();
-
 var clientes = [];
 
 var colores = [
-    "#1976D2",
-    "#D32F2F",
-    "#22B14C",
-    "#F57C00",
-    "#8E24AA",
-    "#0097A7",
-    "#5D4037"
+    "#1976D2", "#D32F2F", "#22B14C", "#F57C00",
+    "#8E24AA", "#0097A7", "#5D4037"
 ];
 
 var coloresVendedor = {};
 
-function obtenerZona(comuna) {
+function normalizar(texto){
+    return String(texto || "")
+        .trim()
+        .toUpperCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+}
 
+function obtenerZona(comuna){
     comuna = parseInt(comuna);
-
-    if ([2, 4, 5, 6].includes(comuna)) return "Norte";
-
-    if ([3, 8, 9, 10, 11].includes(comuna)) return "Centro";
-
-    if ([7, 12, 13, 14, 15, 16, 21].includes(comuna)) return "Oriente";
-
-    if ([17, 18, 19, 22].includes(comuna)) return "Sur";
-
-    if ([1, 20].includes(comuna)) return "Ladera/Oeste";
-
+    if ([2,4,5,6].includes(comuna)) return "Norte";
+    if ([3,8,9,10,11].includes(comuna)) return "Centro";
+    if ([7,12,13,14,15,16,21].includes(comuna)) return "Oriente";
+    if ([17,18,19,22].includes(comuna)) return "Sur";
+    if ([1,20].includes(comuna)) return "Ladera/Oeste";
     return "Sin Zona";
 }
 
@@ -52,140 +47,111 @@ var coloresZona = {
 };
 
 fetch('clientes_cali.csv')
-    .then(r => r.text())
-    .then(text => {
+.then(r => r.text())
+.then(text => {
 
-        let filas = text.split('\n');
+    let filas = text.split('\n');
+    let vendedores = new Set();
+    let barrios = new Set();
+    let comunas = new Set();
 
-        let vendedores = new Set();
-        let barrios = new Set();
-        let comunas = new Set();
+    for (let i = 1; i < filas.length; i++) {
 
-        for (let i = 1; i < filas.length; i++) {
+        let cols = filas[i].split(';');
 
-            let cols = filas[i].split(';');
+        if (cols.length < 14) continue;
 
-            if (cols.length < 14)
-                continue;
+        let vendedor = cols[0].trim();
 
-            let vendedor = cols[0].trim();
+        let cliente = {
+            vendedor: vendedor,
+            nit: cols[1],
+            cliente: cols[2],
+            sucursal: cols[3],
+            direccion: cols[5],
+            barrio: cols[7],
+            comuna: cols[8],
+            zona: obtenerZona(cols[8]),
+            lat: parseFloat(cols[12]),
+            lon: parseFloat(cols[13])
+        };
 
-            let cliente = {
-                vendedor: vendedor,
-                nit: cols[1],
-                cliente: cols[2],
-                sucursal: cols[3],
-                direccion: cols[5],
-                barrio: cols[7],
-                comuna: cols[8],
-                zona: obtenerZona(cols[8]),
-                lat: parseFloat(cols[12]),
-                lon: parseFloat(cols[13])
-            };
+        if (isNaN(cliente.lat) || isNaN(cliente.lon)) continue;
 
-            if (isNaN(cliente.lat) || isNaN(cliente.lon))
-                continue;
-
-            if (!coloresVendedor[vendedor]) {
-
-                let indice = Object.keys(coloresVendedor).length;
-
-                coloresVendedor[vendedor] =
-                    colores[indice % colores.length];
-            }
-
-            let icono = L.divIcon({
-                className: '',
-                html: `
-                    <div style="
-                        width:14px;
-                        height:14px;
-                        border-radius:50%;
-                        border:2px solid white;
-                        background:${coloresVendedor[vendedor]};
-                        box-shadow:0 0 3px #000;">
-                    </div>
-                `,
-                iconSize: [18, 18]
-            });
-
-            let marker = L.marker(
-                [cliente.lat, cliente.lon],
-                { icon: icono }
-            );
-
-            marker.bindPopup(`
-                <div style="font-family:Arial,Helvetica,sans-serif;">
-                    <h3 style="margin:0 0 10px 0;color:#0b4f8a;">
-                        ${cliente.cliente}
-                    </h3>
-
-                    <b>Vendedor:</b> ${cliente.vendedor}<br>
-                    <b>Zona:</b> ${cliente.zona}<br>
-                    <b>Comuna:</b> ${cliente.comuna}<br>
-                    <b>Barrio:</b> ${cliente.barrio}<br>
-                    <b>Sucursal:</b> ${cliente.sucursal}<br>
-                    <b>NIT:</b> ${cliente.nit}<br>
-                    <b>Dirección:</b> ${cliente.direccion}
-                </div>
-            `);
-
-            cliente.marker = marker;
-
-            clientes.push(cliente);
-
-            vendedores.add(vendedor);
-            barrios.add(cliente.barrio);
-            comunas.add(cliente.comuna);
+        if (!coloresVendedor[vendedor]) {
+            let indice = Object.keys(coloresVendedor).length;
+            coloresVendedor[vendedor] = colores[indice % colores.length];
         }
 
-        document.getElementById('totalClientes').innerText =
-            clientes.length;
+        let icono = L.divIcon({
+            className: '',
+            html: `
+                <div style="
+                    width:14px;
+                    height:14px;
+                    border-radius:50%;
+                    border:2px solid white;
+                    background:${coloresVendedor[vendedor]};
+                    box-shadow:0 0 3px #000;">
+                </div>
+            `,
+            iconSize: [18, 18]
+        });
 
-        document.getElementById('totalVendedores').innerText =
-            vendedores.size;
+        let marker = L.marker([cliente.lat, cliente.lon], { icon: icono });
 
-        document.getElementById('totalBarrios').innerText =
-            barrios.size;
+        marker.bindPopup(`
+            <div style="font-family:Arial,Helvetica,sans-serif;">
+                <h3 style="margin:0 0 10px 0;color:#d90000;">
+                    ${cliente.cliente}
+                </h3>
+                <b>Vendedor:</b> ${cliente.vendedor}<br>
+                <b>Zona:</b> ${cliente.zona}<br>
+                <b>Comuna:</b> ${cliente.comuna}<br>
+                <b>Barrio:</b> ${cliente.barrio}<br>
+                <b>Sucursal:</b> ${cliente.sucursal}<br>
+                <b>NIT:</b> ${cliente.nit}<br>
+                <b>Dirección:</b> ${cliente.direccion}
+            </div>
+        `);
 
-        document.getElementById('totalComunas').innerText =
-            comunas.size;
+        cliente.marker = marker;
+        clientes.push(cliente);
 
-        cargarFiltroVendedores(vendedores);
-        cargarBuscador();
-        aplicarFiltros();
-    });
+        vendedores.add(vendedor);
+        barrios.add(cliente.barrio);
+        comunas.add(cliente.comuna);
+    }
 
-function cargarFiltroVendedores(vendedores) {
+    document.getElementById('totalClientes').innerText = clientes.length;
+    document.getElementById('totalVendedores').innerText = vendedores.size;
+    document.getElementById('totalBarrios').innerText = barrios.size;
+    document.getElementById('totalComunas').innerText = comunas.size;
+
+    cargarFiltroVendedores(vendedores);
+    cargarBuscador();
+    aplicarFiltros();
+});
+
+function cargarFiltroVendedores(vendedores){
 
     let combo = document.getElementById('filtroVendedor');
 
-    [...vendedores]
-        .sort()
-        .forEach(v => {
-
-            let op = document.createElement('option');
-
-            op.value = v;
-            op.textContent = v;
-
-            combo.appendChild(op);
-        });
+    [...vendedores].sort().forEach(v => {
+        let op = document.createElement('option');
+        op.value = v;
+        op.textContent = v;
+        combo.appendChild(op);
+    });
 
     combo.addEventListener('change', aplicarFiltros);
-
-    document
-        .getElementById('filtroZona')
-        .addEventListener('change', aplicarFiltros);
+    document.getElementById('filtroZona').addEventListener('change', aplicarFiltros);
 }
 
-function aplicarFiltros() {
+function aplicarFiltros(){
 
-    let vendedor =
-        document.getElementById('filtroVendedor').value;
-
-    let zona =
-        document.getElementById('filtroZona').value;
+    let vendedor = document.getElementById('filtroVendedor').value;
+    let zona = document.getElementById('filtroZona').value;
 
     markers.clearLayers();
 
@@ -193,14 +159,10 @@ function aplicarFiltros() {
 
     clientes.forEach(c => {
 
-        let cumpleVendedor =
-            vendedor === "" || c.vendedor === vendedor;
-
-        let cumpleZona =
-            zona === "" || c.zona === zona;
+        let cumpleVendedor = vendedor === "" || c.vendedor === vendedor;
+        let cumpleZona = zona === "" || c.zona === zona;
 
         if (cumpleVendedor && cumpleZona) {
-
             markers.addLayer(c.marker);
             visibles.push(c);
         }
@@ -215,52 +177,34 @@ function aplicarFiltros() {
     actualizarDashboard(visibles);
 }
 
-function actualizarDashboard(visibles) {
+function actualizarDashboard(visibles){
 
-    document.getElementById('clientesVisibles').innerText =
-        visibles.length;
+    document.getElementById('clientesVisibles').innerText = visibles.length;
 
     let zonas = {};
     let vendedores = {};
 
     visibles.forEach(c => {
-
-        zonas[c.zona] =
-            (zonas[c.zona] || 0) + 1;
-
-        vendedores[c.vendedor] =
-            (vendedores[c.vendedor] || 0) + 1;
+        zonas[c.zona] = (zonas[c.zona] || 0) + 1;
+        vendedores[c.vendedor] = (vendedores[c.vendedor] || 0) + 1;
     });
 
     actualizarZonas(zonas);
     actualizarVendedores(vendedores);
 }
 
-function actualizarZonas(zonas) {
+function actualizarZonas(zonas){
 
-    let orden = [
-        "Norte",
-        "Centro",
-        "Oriente",
-        "Sur",
-        "Ladera/Oeste",
-        "Sin Zona"
-    ];
-
+    let orden = ["Norte", "Centro", "Oriente", "Sur", "Ladera/Oeste", "Sin Zona"];
     let html = '';
 
     orden.forEach(z => {
-
-        if (!zonas[z])
-            return;
+        if (!zonas[z]) return;
 
         html += `
             <div class="item-lista">
                 <div class="item-nombre">
-                    <span
-                        class="color-zona"
-                        style="background:${coloresZona[z]}">
-                    </span>
+                    <span class="color-zona" style="background:${coloresZona[z]}"></span>
                     ${z}
                 </div>
                 <strong>${zonas[z]}</strong>
@@ -271,88 +215,83 @@ function actualizarZonas(zonas) {
     document.getElementById('estadisticasZona').innerHTML = html;
 }
 
-function actualizarVendedores(vendedores) {
+function actualizarVendedores(vendedores){
 
     let html = '';
 
-    Object.keys(vendedores)
-        .sort()
-        .forEach(v => {
-
-            html += `
-                <div class="item-lista">
-                    <div class="item-nombre">
-                        <span
-                            class="color-vendedor"
-                            style="background:${coloresVendedor[v]}">
-                        </span>
-                        ${v}
-                    </div>
-                    <strong>${vendedores[v]}</strong>
+    Object.keys(vendedores).sort().forEach(v => {
+        html += `
+            <div class="item-lista">
+                <div class="item-nombre">
+                    <span class="color-vendedor" style="background:${coloresVendedor[v]}"></span>
+                    ${v}
                 </div>
-            `;
-        });
+                <strong>${vendedores[v]}</strong>
+            </div>
+        `;
+    });
 
     document.getElementById('estadisticasVendedores').innerHTML = html;
 }
 
-function cargarBuscador() {
+function cargarBuscador(){
 
     let lista = document.getElementById('listaClientes');
+    lista.innerHTML = "";
 
     clientes.forEach(c => {
-
         let op = document.createElement('option');
-
         op.value = c.cliente;
-
         lista.appendChild(op);
     });
 
-    document
-        .getElementById('buscarCliente')
-        .addEventListener('change', buscarCliente);
+    let input = document.getElementById('buscarCliente');
+
+    input.addEventListener('change', buscarCliente);
+    input.addEventListener('keydown', function(e){
+        if(e.key === "Enter"){
+            buscarCliente();
+        }
+    });
 }
 
-function buscarCliente() {
+function buscarCliente(){
 
-    let texto =
-        document
-            .getElementById('buscarCliente')
-            .value
-            .trim()
-            .toUpperCase();
+    let textoOriginal = document.getElementById('buscarCliente').value;
+    let texto = normalizar(textoOriginal);
 
-    let cliente =
-        clientes.find(c =>
-            c.cliente.toUpperCase() === texto
+    if(texto === "") return;
+
+    let cliente = clientes.find(c =>
+        normalizar(c.cliente) === texto
+    );
+
+    if(!cliente){
+        cliente = clientes.find(c =>
+            normalizar(c.cliente).includes(texto)
         );
+    }
 
-    if (!cliente)
+    if(!cliente){
+        alert("No se encontró ningún cliente con: " + textoOriginal);
         return;
+    }
 
     document.getElementById('filtroVendedor').value = "";
     document.getElementById('filtroZona').value = "";
 
     aplicarFiltros();
 
-    map.setView(
-        [cliente.lat, cliente.lon],
-        18
-    );
-
+    map.setView([cliente.lat, cliente.lon], 18);
     cliente.marker.openPopup();
 
-    if (window.innerWidth <= 768) {
+    if(window.innerWidth <= 768){
         cerrarPanel();
     }
 }
 
-if (window.innerWidth <= 768) {
-
-    document
-        .getElementById('map')
-        .addEventListener('click', function () {
-            cerrarPanel();
-        });
+if(window.innerWidth <= 768){
+    document.getElementById('map').addEventListener('click', function(){
+        cerrarPanel();
+    });
 }
