@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>GRUPO CADAYA - Mapa Comercial</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    font-family:Arial, Helvetica, sans-serif;
+    background:#f4f6f8;
+}
+
+/* LOGIN CORPORATIVO */
+#login{
+    position:fixed;
+    inset:0;
+    background:
+        radial-gradient(circle at 85% 40%, #111 0%, #111 22%, transparent 23%),
+        radial-gradient(circle at 15% 100%, #d90000 0%, #d90000 28%, transparent 29%),
+        linear-gradient(135deg, #ffffff 0%, #ffffff 55%, #111 56%, #111 100%);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:99999;
+    overflow:hidden;
+}
+
+#login::before{
+    content:"";
+    position:absolute;
+    width:700px;
+    height:220px;
+    background:#e00000;
+    bottom:-80px;
+    left:-120px;
+    border-radius:50%;
+    transform:rotate(-8deg);
+}
+
+#login::after{
+    content:"";
+    position:absolute;
+    width:600px;
+    height:180px;
+    background:#e00000;
+    top:40px;
+    right:-180px;
+    border-radius:50%;
+    transform:rotate(-35deg);
+}
+
+.login-card{
+    position:relative;
+    z-index:2;
+    width:90%;
+    max-width:720px;
+    background:rgba(255,255,255,.96);
+    padding:35px 45px;
+    border-radius:18px;
+    box-shadow:0 18px 45px rgba(0,0,0,.35);
+    text-align:center;
+}
+
+.logo-login-img{
+    width:100%;
+    max-width:560px;
+    margin-bottom:25px;
+}
+
+.linea-login{
+    height:1px;
+    background:#ddd;
+    margin:15px 0 25px 0;
+}
+
+.titulo-login{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+    margin-bottom:28px;
+    font-size:28px;
+    font-weight:800;
+    letter-spacing:8px;
+    color:#111;
+}
+
+.titulo-login span{
+    color:#d90000;
+}
+
+.titulo-login::before,
+.titulo-login::after{
+    content:"";
+    width:80px;
+    height:2px;
+    background:#d90000;
+}
+
+.login-input{
+    width:100%;
+    padding:16px 18px;
+    margin-bottom:15px;
+    border:1px solid #cfcfcf;
+    border-radius:8px;
+    font-size:18px;
+    background:white;
+}
+
+.login-input:focus{
+    outline:none;
+    border-color:#d90000;
+    box-shadow:0 0 0 2px rgba(217,0,0,.15);
+}
+
+.login-card button{
+    width:100%;
+    padding:16px;
+    margin-top:8px;
+    background:linear-gradient(90deg,#c90000,#ed0000);
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-size:22px;
+    font-weight:800;
+    cursor:pointer;
+}
+
+.acceso-restringido{
+    margin-top:22px;
+    color:#777;
+    letter-spacing:4px;
+    font-size:14px;
+}
+
+#errorLogin{
+    color:#d32f2f;
+    margin-top:12px;
+    display:none;
+    font-size:14px;
+}
+
+/* APP */
+#app{
+    display:none;
+    width:100%;
+    height:100vh;
+}
+
+#contenedor{
+    display:flex;
+    width:100%;
+    height:100%;
+}
+
+/* PANEL */
+#panel{
+    width:380px;
+    min-width:380px;
+    max-width:380px;
+    height:100vh;
+    background:#ffffff;
+    border-right:1px solid #dcdcdc;
+    overflow-y:auto;
+    box-shadow:3px 0 12px rgba(0,0,0,.12);
+    z-index:9999;
+}
+
+.encabezado{
+    padding:24px 24px 18px 24px;
+    border-bottom:1px solid #e6e6e6;
+}
+
+.logo-panel-img{
+    width:100%;
+    max-width:310px;
+}
+
+.contenido-panel{
+    padding:20px 22px;
+}
+
+.seccion{
+    margin-bottom:24px;
+}
+
+.titulo-seccion{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:15px;
+    font-weight:bold;
+    color:#d90000;
+    text-transform:uppercase;
+    margin-bottom:12px;
+}
+
+.filtro{
+    width:100%;
+    padding:12px 14px;
+    border:1px solid #d5dce3;
+    border-radius:8px;
+    margin-bottom:12px;
+    font-size:14px;
+    background:#fff;
+    color:#333;
+}
+
+.filtro:focus{
+    outline:none;
+    border-color:#d90000;
+    box-shadow:0 0 0 2px rgba(217,0,0,.12);
+}
+
+.card{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+    padding:13px 14px;
+    background:#ffffff;
+    border:1px solid #e5e8ec;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.05);
+}
+
+.card-label{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:#333;
+    font-size:14px;
+}
+
+.icono-card{
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:white;
+    font-size:15px;
+    font-weight:bold;
+}
+
+.rojo{background:#d90000;}
+.negro{background:#111;}
+.gris{background:#555;}
+
+.card-numero{
+    font-size:22px;
+    font-weight:bold;
+    color:#d90000;
+}
+
+.item-lista{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:7px 0;
+    font-size:14px;
+    border-bottom:1px solid #f0f0f0;
+}
+
+.item-lista:last-child{
+    border-bottom:none;
+}
+
+.item-nombre{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.color-vendedor,
+.color-zona{
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    display:inline-block;
+}
+
+#estadisticasZona,
+#estadisticasVendedores{
+    max-height:260px;
+    overflow:auto;
+}
+
+#map{
+    flex:1;
+    height:100vh;
+}
+
+/* MÓVIL */
+#btnMenu{
+    display:none;
+    position:fixed;
+    top:15px;
+    right:15px;
+    z-index:10000;
+    background:#d90000;
+    color:white;
+    border:none;
+    padding:11px 15px;
+    border-radius:8px;
+    font-size:22px;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(0,0,0,.3);
+}
+
+#cerrarPanel{
+    display:none;
+    background:#111;
+    color:white;
+    border:none;
+    border-radius:8px;
+    padding:10px;
+    width:100%;
+    margin-bottom:15px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.leaflet-popup-content{
+    min-width:260px;
+}
+
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-thumb{background:#b7b7b7;border-radius:4px}
+::-webkit-scrollbar-track{background:#f1f1f1}
+
+@media (max-width:768px){
+
+    #contenedor{display:block}
+
+    #panel{
+        position:fixed;
+        top:0;
+        left:-390px;
+        height:100vh;
+        transition:left .3s ease;
+    }
+
+    #panel.activo{left:0}
+
+    #map{
+        width:100%;
+        height:100vh;
+    }
+
+    #btnMenu{display:block}
+
+    #cerrarPanel{display:block}
+
+    .login-card{
+        padding:25px;
+    }
+
+    .titulo-login{
+        font-size:20px;
+        letter-spacing:4px;
+    }
+
+    .titulo-login::before,
+    .titulo-login::after{
+        width:35px;
+    }
+}
+
+@media (max-width:420px){
+
+    #panel{
+        width:340px;
+        min-width:340px;
+        max-width:340px;
+        left:-350px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="login">
+    <div class="login-card">
+
+        <img src="logo_cadaya.png" class="logo-login-img" alt="GRUPO CADAYA">
+
+        <div class="linea-login"></div>
+
+        <div class="titulo-login">
+            MAPA <span>COMERCIAL</span>
+        </div>
+
+        <input class="login-input" type="text" id="usuario" placeholder="Usuario">
+        <input class="login-input" type="password" id="clave" placeholder="Contraseña">
+
+        <button onclick="iniciarSesion()">INGRESAR</button>
+
+        <div class="acceso-restringido">ACCESO RESTRINGIDO</div>
+
+        <div id="errorLogin">Usuario o contraseña incorrectos</div>
+    </div>
+</div>
+
+<div id="app">
+
+    <button id="btnMenu" onclick="abrirPanel()">☰</button>
+
+    <div id="contenedor">
+
+        <div id="panel">
+
+            <div class="encabezado">
+                <button id="cerrarPanel" onclick="cerrarPanel()">Cerrar panel</button>
+                <img src="logo_cadaya.png" class="logo-panel-img" alt="GRUPO CADAYA">
+            </div>
+
+            <div class="contenido-panel">
+
+                <div class="seccion">
+                    <div class="titulo-seccion">🔎 Filtros</div>
+
+                    <input type="text" id="buscarCliente" list="listaClientes" placeholder="Buscar cliente..." class="filtro">
+                    <datalist id="listaClientes"></datalist>
+
+                    <select id="filtroVendedor" class="filtro">
+                        <option value="">Todos los vendedores</option>
+                    </select>
+
+                    <select id="filtroZona" class="filtro">
+                        <option value="">Todas las zonas</option>
+                        <option value="Norte">Norte</option>
+                        <option value="Centro">Centro</option>
+                        <option value="Oriente">Oriente</option>
+                        <option value="Sur">Sur</option>
+                        <option value="Ladera/Oeste">Ladera/Oeste</option>
+                    </select>
+                </div>
+
+                <div class="seccion">
+                    <div class="titulo-seccion">📊 Indicadores</div>
+
+                    <div class="card">
+                        <div class="card-label"><div class="icono-card rojo">C</div>Clientes Totales</div>
+                        <div class="card-numero" id="totalClientes">0</div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-label"><div class="icono-card negro">V</div>Clientes Visibles</div>
+                        <div class="card-numero" id="clientesVisibles">0</div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-label"><div class="icono-card rojo">P</div>Vendedores</div>
+                        <div class="card-numero" id="totalVendedores">0</div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-label"><div class="icono-card negro">B</div>Barrios</div>
+                        <div class="card-numero" id="totalBarrios">0</div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-label"><div class="icono-card gris">Z</div>Comunas</div>
+                        <div class="card-numero" id="totalComunas">0</div>
+                    </div>
+                </div>
+
+                <div class="seccion">
+                    <div class="titulo-seccion">📍 Clientes por Zona</div>
+                    <div id="estadisticasZona"></div>
+                </div>
+
+                <div class="seccion">
+                    <div class="titulo-seccion">👤 Clientes por Vendedor</div>
+                    <div id="estadisticasVendedores"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="app.js"></script>
+
+<script>
+function iniciarSesion(){
+    const usuario = document.getElementById("usuario").value.trim();
+    const clave = document.getElementById("clave").value.trim();
+
+    if(usuario === "cadaya" && clave === "cadaya2026"){
+        document.getElementById("login").style.display = "none";
+        document.getElementById("app").style.display = "block";
+
+        setTimeout(function(){
+            if(window.map){
+                window.map.invalidateSize();
+            }
+        },300);
+    }else{
+        document.getElementById("errorLogin").style.display = "block";
+    }
+}
+
+function abrirPanel(){
+    document.getElementById("panel").classList.add("activo");
+}
+
+function cerrarPanel(){
+    document.getElementById("panel").classList.remove("activo");
+}
+</script>
+
+</body>
+</html>
