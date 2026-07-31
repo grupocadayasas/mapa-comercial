@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#d91f26">
+  <title>Mi Horario | Grupo Cadaya</title>
+  <style>
+    :root {
+      --red:#d91f26; --red-dark:#a90f17; --black:#171717; --ink:#252525;
+      --muted:#6b7280; --line:#e5e7eb; --bg:#f4f5f7; --card:#fff;
+      --shadow:0 18px 50px rgba(20,20,20,.12);
+      --con:#f8c7c9; --sin:#cde8f7; --kaleth:#eadcf1; --sergio:#f8ddd0;
+      --oper:#d8f2df; --moto:#fff0c9; --holiday:#2e7d32; --rest:#e5e7eb;
+      --pending:#ffe3a3;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    .hidden{display:none!important}
+    .login-screen{
+      min-height:100vh;display:grid;place-items:center;padding:24px;
+      background:
+        radial-gradient(circle at 90% 10%,rgba(217,31,38,.16),transparent 34%),
+        radial-gradient(circle at 10% 90%,rgba(23,23,23,.12),transparent 35%),
+        linear-gradient(145deg,#fff 0 52%,#f1f2f4 52% 100%);
+    }
+    .login-card{width:min(520px,100%);background:rgba(255,255,255,.97);border:1px solid #fff;border-radius:26px;padding:34px;box-shadow:var(--shadow);text-align:center}
+    .brand-logo{width:min(330px,82%);max-height:120px;object-fit:contain;margin-bottom:16px}
+    .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--red);font-weight:800}
+    h1{margin:10px 0 8px;font-size:clamp(30px,7vw,46px);line-height:1}
+    .login-copy{margin:0 auto 26px;max-width:390px;color:var(--muted);line-height:1.55}
+    .field-label{display:block;text-align:left;font-weight:750;font-size:14px;margin-bottom:8px}
+    .cc-input{width:100%;height:54px;border:1px solid #cfd3d8;border-radius:14px;padding:0 16px;font-size:20px;letter-spacing:.05em;outline:none;transition:.2s;background:#fff}
+    .cc-input:focus{border-color:var(--red);box-shadow:0 0 0 4px rgba(217,31,38,.12)}
+    .primary{width:100%;height:52px;border:0;border-radius:14px;margin-top:14px;background:linear-gradient(135deg,var(--red),#f03940);color:#fff;font-weight:850;font-size:17px;box-shadow:0 10px 24px rgba(217,31,38,.25)}
+    .primary:disabled{opacity:.55;cursor:not-allowed}
+    .login-error{min-height:22px;margin-top:12px;color:#b42318;font-weight:700}
+    .privacy-note{margin:18px 0 0;color:#858b94;font-size:12px;line-height:1.45}
+    .app{min-height:100vh}
+    .topbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+    .topbar-inner{max-width:1260px;margin:auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .mini-brand{display:flex;align-items:center;gap:12px;min-width:0}
+    .mini-brand img{height:44px;width:120px;object-fit:contain;object-position:left center}
+    .mini-title{font-weight:900;white-space:nowrap}
+    .mini-subtitle{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .logout{border:1px solid #d4d6da;background:#fff;border-radius:11px;padding:9px 12px;font-weight:750;color:#444}
+    .container{max-width:1260px;margin:auto;padding:24px 22px 44px}
+    .profile-card{background:linear-gradient(135deg,#191919,#2c2c2c);color:white;border-radius:22px;padding:22px;display:grid;grid-template-columns:1fr auto;gap:20px;box-shadow:var(--shadow)}
+    .profile-name{font-size:clamp(23px,4vw,34px);font-weight:900;line-height:1.12;margin:4px 0 10px}
+    .profile-meta{display:flex;flex-wrap:wrap;gap:8px}
+    .meta-pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);padding:8px 10px;border-radius:999px;font-size:13px}
+    .today-box{min-width:220px;background:#fff;color:var(--ink);border-radius:17px;padding:16px}
+    .today-label{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.1em}
+    .today-shift{font-size:19px;font-weight:900;margin-top:8px}
+    .today-detail{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.4}
+    .notice{margin-top:16px;border-radius:16px;padding:14px 16px;background:#fff4da;border:1px solid #f2d88d;color:#704b00;font-weight:650;line-height:1.45}
+    .toolbar{margin:22px 0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .month-nav{display:flex;align-items:center;gap:10px}
+    .nav-btn{width:40px;height:40px;border:1px solid var(--line);background:white;border-radius:12px;font-size:20px}
+    .month-label{font-size:clamp(21px,4vw,28px);font-weight:900;min-width:200px;text-align:center;text-transform:capitalize}
+    .view-toggle{display:flex;background:#e9ebee;padding:4px;border-radius:13px}
+    .view-btn{border:0;background:transparent;padding:9px 15px;border-radius:10px;font-weight:800;color:#5b616b}
+    .view-btn.active{background:white;color:var(--red);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+    .calendar-shell,.week-shell{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;box-shadow:0 10px 32px rgba(30,30,30,.07)}
+    .weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:8px}
+    .weekday{text-align:center;font-size:12px;font-weight:850;color:var(--muted);padding:8px 2px;text-transform:uppercase}
+    .calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+    .day{min-height:116px;border:1px solid var(--line);border-radius:15px;padding:10px;background:#fff;text-align:left;position:relative;transition:.18s;overflow:hidden}
+    .day:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.08)}
+    .day.empty{visibility:hidden}
+    .day.today{outline:3px solid rgba(217,31,38,.25);border-color:var(--red)}
+    .date-number{font-size:15px;font-weight:900}
+    .shift-chip{display:block;margin-top:11px;border-radius:9px;padding:7px 8px;font-size:12px;font-weight:850;line-height:1.25}
+    .shift-time{font-size:12px;margin-top:6px;color:#4b5563;font-weight:700}
+    .type-CON_SAB .shift-chip{background:var(--con)}
+    .type-SIN_SAB .shift-chip{background:var(--sin)}
+    .type-KALETH .shift-chip{background:var(--kaleth)}
+    .type-SERGIO .shift-chip{background:var(--sergio)}
+    .type-MALLA_C .shift-chip{background:var(--oper)}
+    .type-MALLA_D .shift-chip{background:var(--moto)}
+    .type-HOLIDAY .shift-chip{background:var(--holiday);color:white}
+    .type-REST .shift-chip,.type-NOT_STARTED .shift-chip{background:var(--rest)}
+    .type-PENDING .shift-chip{background:var(--pending)}
+    .week-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
+    .week-day{border:1px solid var(--line);border-radius:15px;padding:13px;min-height:172px;background:#fff}
+    .week-day.selected{border-color:var(--red);box-shadow:0 0 0 3px rgba(217,31,38,.10)}
+    .week-date{font-weight:900;margin-bottom:10px}
+    .week-info{font-size:13px;color:#4b5563;line-height:1.55}
+    .week-info strong{color:var(--ink)}
+    .legend{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+    .legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:#565d67}
+    .legend-dot{width:13px;height:13px;border-radius:4px;border:1px solid rgba(0,0,0,.08)}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.48);display:grid;place-items:end center;padding:18px;z-index:50}
+    .modal{width:min(540px,100%);background:#fff;border-radius:24px 24px 18px 18px;padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.35);animation:up .2s ease}
+    @keyframes up{from{transform:translateY(25px);opacity:.5}}
+    .modal-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}
+    .modal-date{font-size:22px;font-weight:900;text-transform:capitalize}
+    .close{border:0;background:#f1f2f4;width:38px;height:38px;border-radius:50%;font-size:20px}
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:17px}
+    .detail{background:#f6f7f8;border-radius:13px;padding:13px}
+    .detail-label{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:850;letter-spacing:.07em}
+    .detail-value{font-weight:850;margin-top:5px;line-height:1.35}
+    .modal-note{margin-top:12px;background:#fff2f2;border-left:4px solid var(--red);padding:12px;border-radius:9px;line-height:1.45}
+    .footer{text-align:center;color:#858b94;font-size:12px;margin-top:24px;line-height:1.5}
+    @media(max-width:850px){
+      .profile-card{grid-template-columns:1fr} .today-box{min-width:0}
+      .calendar{gap:5px} .day{min-height:96px;padding:8px} .shift-time{display:none}
+      .week-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:600px){
+      .container{padding:16px 10px 32px} .topbar-inner{padding:9px 12px}
+      .mini-brand img{width:76px;height:36px} .mini-subtitle{display:none}
+      .profile-card{border-radius:18px;padding:18px} .calendar-shell,.week-shell{padding:8px;border-radius:17px}
+      .weekday{font-size:10px} .calendar{gap:4px}
+      .day{min-height:78px;padding:6px;border-radius:11px} .date-number{font-size:13px}
+      .shift-chip{font-size:9px;padding:5px 3px;margin-top:7px;text-align:center}
+      .month-label{min-width:150px;font-size:19px}
+      .detail-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <section id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <img class="brand-logo" src="../logo_cadaya.png" alt="Grupo Cadaya">
+      <div class="eyebrow">Consulta interna temporal</div>
+      <h1>Mi horario</h1>
+      <p class="login-copy">Digita tu número de cédula para consultar tu calendario mensual o tu programación semanal.</p>
+      <form id="loginForm" autocomplete="off">
+        <label class="field-label" for="cc">Número de cédula</label>
+        <input id="cc" class="cc-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" placeholder="Digita solo números" aria-describedby="loginError">
+        <button id="loginButton" class="primary" type="submit">Consultar mi horario</button>
+        <div id="loginError" class="login-error" role="alert"></div>
+      </form>
+      <p class="privacy-note">Versión temporal en GitHub Pages. La cédula no se muestra ni se guarda en el navegador. Esta página será reemplazada posteriormente por el acceso seguro desde AXORA.</p>
+    </div>
+  </section>
+
+  <main id="app" class="app hidden">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="mini-brand">
+          <img src="../logo_cadaya.png" alt="Grupo Cadaya">
+          <div>
+            <div class="mini-title">Mi horario</div>
+            <div id="topName" class="mini-subtitle"></div>
+          </div>
+        </div>
+        <button id="logout" class="logout">Salir</button>
+      </div>
+    </header>
+
+    <div class="container">
+      <section class="profile-card">
+        <div>
+          <div class="eyebrow">GRUPO CADAYA SAS</div>
+          <div id="profileName" class="profile-name"></div>
+          <div class="profile-meta">
+            <span id="profileArea" class="meta-pill"></span>
+            <span id="profileRole" class="meta-pill"></span>
+            <span id="profileSite" class="meta-pill"></span>
+          </div>
+        </div>
+        <div class="today-box">
+          <div class="today-label">Turno de hoy</div>
+          <div id="todayShift" class="today-shift"></div>
+          <div id="todayDetail" class="today-detail"></div>
+        </div>
+      </section>
+
+      <div id="pendingNotice" class="notice hidden"></div>
+
+      <div class="toolbar">
+        <div class="month-nav">
+          <button id="prevPeriod" class="nav-btn" aria-label="Periodo anterior">‹</button>
+          <div id="periodLabel" class="month-label"></div>
+          <button id="nextPeriod" class="nav-btn" aria-label="Periodo siguiente">›</button>
+        </div>
+        <div class="view-toggle" role="tablist">
+          <button id="monthViewBtn" class="view-btn active" role="tab">Mes</button>
+          <button id="weekViewBtn" class="view-btn" role="tab">Semana</button>
+        </div>
+      </div>
+
+      <section id="monthView" class="calendar-shell">
+        <div class="weekdays">
+          <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div>
+          <div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+        </div>
+        <div id="calendar" class="calendar"></div>
+      </section>
+
+      <section id="weekView" class="week-shell hidden">
+        <div id="weekGrid" class="week-grid"></div>
+      </section>
+
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:var(--con)"></span>Con sábado</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--sin)"></span>Sin sábado</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--kaleth)"></span>Especial</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--oper)"></span>Operación</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--holiday)"></span>Festivo</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--rest)"></span>Descanso</div>
+      </div>
+
+      <div class="footer">Los lunes todos inician a las 7:30 a. m. en la sede Acopi para la integración. Al finalizar, cada persona se dirige a su sede o punto habitual.<br>Versión temporal 1.0 · Julio de 2026</div>
+    </div>
+  </main>
+
+  <div id="modalBackdrop" class="modal-backdrop hidden">
+    <article class="modal" role="dialog" aria-modal="true" aria-labelledby="modalDate">
+      <div class="modal-head">
+        <div>
+          <div class="eyebrow">Detalle del turno</div>
+          <div id="modalDate" class="modal-date"></div>
+        </div>
+        <button id="closeModal" class="close" aria-label="Cerrar">×</button>
+      </div>
+      <div id="modalDetails" class="detail-grid"></div>
+      <div id="modalNote" class="modal-note hidden"></div>
+    </article>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  const CONFIG = {
+    startDate: "2026-08-03",
+    initialMonth: "2026-08-01",
+    holidays: {
+      "2026-08-07": "Batalla de Boyacá",
+      "2026-08-17": "Asunción de la Virgen"
+    }
+  };
+
+  const PEOPLE = [{"name":"CAMILO ANDRES POTES LOZANO","hash":"eec869b98e594999a57f282ea880a072d56e390c35fdd3d7854e463d6a1dcd79","area":"Área Comercial","role":"Asesor Comercial","site":"Sede habitual","pattern":"PENDING"},{"name":"ELIZABETH TAMAYO LOPEZ","hash":"085b6db5cede82ae6bac3e660246c47ee8777b74792415eb39c0571ad1d87a30","area":"Área Comercial","role":"Asesora Comercial","site":"Sede habitual","pattern":"PENDING"},{"name":"LAURENT DANIEL ARENAS ALZATE","hash":"fbf91f69134db860e9cb5762e6c1f0abec3e24e46ffe6a777dde17217f64b66a","area":"Área Comercial","role":"Asesor Comercial","site":"Sede habitual","pattern":"PENDING"},{"name":"LIZETH ASTRID ARANA LOPEZ","hash":"264981ead7e2beb6f761477ff7e4842e2853d092f0be7af339f81943a6ef0d01","area":"Área Comercial","role":"Asesora Comercial","site":"Sede habitual","pattern":"PENDING"},{"name":"LUISA MARIA ZUNIGA","hash":"11200f05d636afe6a36464780b209ea8696f487bd1ed845b28070dc98fdd376d","area":"Área Comercial","role":"Asesora Comercial","site":"Sede habitual","pattern":"PENDING"},{"name":"MARIA LIZANA SÁNCHEZ CASTAÑEDA","hash":"76c3440ec15817b16a201984bce4e3495cb3fa7c2d20c265bd8fb7b00e8eea60","area":"Área Comercial","role":"Asesora Comercial","site":"Sede habitual","pattern":"PENDING"},{"name":"DIANA LORENA MORENO SALCEDO","hash":"7e4b156ff4c62d441a3fe4218e8c0b388b03d96ecf08cd21388187101efe4521","area":"Facturación","role":"Asistente Administrativa","site":"Ingenio","pattern":["CON_SAB","SIN_SAB"]},{"name":"YAMILETH MORALES ESCOBAR","hash":"faf335ddd227a6a691248bf726b4b69aa5bc930020bae0bd4275d17d370d2094","area":"Tesorería y Recaudo","role":"Tesorería","site":"Ingenio","pattern":["SIN_SAB","CON_SAB"]},{"name":"KALETH DAVID GARCIA MORENO","hash":"38348258aae56211f844f288323270bfe889367e182e6116397fd5fce80fe055","area":"Facturación","role":"Facturador Ingenio","site":"Ingenio","pattern":"KALETH"},{"name":"DAVID ALEJANDRO ARANGO SILVA","hash":"9e19d9ce3f635fc8dc75979c9227cce74d2b4f75b1b6b455882639268e28a78a","area":"Facturación","role":"Facturador Acopi","site":"Acopi","pattern":["SIN_SAB","CON_SAB"]},{"name":"SERGIO DUVAL HOYOS CAICEDO","hash":"5d14566b647be45928f5df6a4b1c5625d07f1314daad8378a0cd44de636987ac","area":"Tesorería y Recaudo","role":"Auxiliar Contable","site":"Ingenio","pattern":["SERGIO","SIN_SAB"]},{"name":"ALEXANDER MARTINEZ DIAZ","hash":"43a02ec3372c9db2a300610e4311b224527b73c914a875bc1198f553e1839f77","area":"Distribución vehicular y auxiliares","role":"Operador de distribución vehicular","site":"Punto habitual / ruta","pattern":"MALLA_C"},{"name":"CARLOS CASTRO GONZALEZ","hash":"441400e982b17f43a93bf6ad292a59ab40b45ef664ce20ae76051e6b8fe23631","area":"Distribución vehicular y auxiliares","role":"Auxiliar de distribución","site":"Punto habitual / ruta","pattern":"MALLA_C"},{"name":"DANIEL STIVEN RAMOS TORRES","hash":"dd13044936a445c60e1bcb30c7a48401e445c09950cf682621063ed9288c50fb","area":"Distribución motorizada","role":"Operador de distribución motorizado","site":"Punto habitual / ruta","pattern":"MALLA_D"},{"name":"EDGAR RAMIREZ RENGIFO","hash":"832c6336ca73ffc199ae99c1eaa49b95de7b9ed2715c7162dba9a3e9a56e242a","area":"Distribución vehicular y auxiliares","role":"Operador de distribución vehicular","site":"Punto habitual / ruta","pattern":"MALLA_C"},{"name":"EDIER SANTIAGO HERNANDEZ GONZALEZ","hash":"3b273d82f0c845ec6c57f1b16039c3356d0158c219eb032622e26fdd6a081dba","area":"Distribución vehicular y auxiliares","role":"Auxiliar de distribución","site":"Punto habitual / ruta","pattern":"MALLA_C"},{"name":"EDISON RACINES MOSQUERA","hash":"d86c497028020ed9f33d1b35751cd9f38eee18e312faa81712e480b64f63923d","area":"Auxiliares líderes de bodega","role":"Jefe de Bodega Broker Nestlé","site":"Acopi","pattern":["SIN_SAB","CON_SAB"]},{"name":"JEYSON ARLEX TABORDA LARA","hash":"1b983faae149b8acf2b0be0801628ad55e00d5d43d9aeac62a5ee563ff3410ff","area":"Distribución vehicular y auxiliares","role":"Auxiliar de distribución","site":"Punto habitual / ruta","pattern":"MALLA_C"},{"name":"MICHAELL ANDRES MORENO CALLEJAS","hash":"c5b1b9b9ec3a223cd7ef6ac5dae371ecebff1377ef9844d847d3279e47df25db","area":"Distribución motorizada","role":"Operador de distribución motorizado","site":"Punto habitual / ruta","pattern":"MALLA_D"},{"name":"PATRICIA PAOLA PARRA SALAS","hash":"3a20739c049545bb327e462b4996cbdf5bd4f03a14d9a426865af3990b72023f","area":"Líderes de bodega","role":"Asistente de Gerencia Comercial","site":"Acopi","pattern":["SIN_SAB","CON_SAB"]},{"name":"YOHANA ANDREA CARDONA OBANDO","hash":"a19f601aa634fe0acc21ebb9d92c89f19a33a967a737814eb1dc10ab028c60f7","area":"Distribución vehicular y auxiliares","role":"Operadora de distribución vehicular","site":"Punto habitual / ruta","pattern":"MALLA_C"},{"name":"YULIETH MARCELA BEDOYA RUIZ","hash":"acf86bf7135ca35946943ba3ff1abe8784068f57f41105a138ea456708a779e9","area":"Líderes de bodega","role":"Jefe de Bodega Broker Cadaya","site":"Acopi","pattern":["CON_SAB","SIN_SAB"]},{"name":"WUTER YEINS LOPEZ SALDARIAGA","hash":"f5d096b60d8a9a133104e6ef2aee25c25a987b71259f166c490cdaf09c1ebc2a","area":"Distribución vehicular y auxiliares","role":"Operador de distribución vehicular","site":"Punto habitual / ruta","pattern":"MALLA_C"},{"name":"JOAQUIN CAICEDO AGUIRRE","hash":"16228ae7df59a7a6af50f06221854941faf1577da3b0a4c04c035f7b693cf31b","area":"Auxiliares líderes de bodega","role":"Supervisor Logístico","site":"Acopi","pattern":["CON_SAB","SIN_SAB"]}];
+
+  const SHIFTS = {
+    CON_SAB: {
+      label:"Malla con sábado",
+      days:{
+        1:["7:30 a. m.","4:00 p. m.","1 hora",7.5],
+        2:["7:30 a. m.","4:00 p. m.","1 hora",7.5],
+        3:["7:30 a. m.","4:00 p. m.","1 hora",7.5],
+        4:["7:30 a. m.","4:00 p. m.","1 hora",7.5],
+        5:["7:30 a. m.","2:30 p. m.","1 hora",6],
+        6:["7:30 a. m.","1:30 p. m.","Sin almuerzo",6]
+      }
+    },
+    SIN_SAB: {
+      label:"Malla sin sábado",
+      days:{
+        1:["7:30 a. m.","5:30 p. m.","1 hora",9],
+        2:["8:00 a. m.","5:30 p. m.","1 hora",8.5],
+        3:["8:00 a. m.","5:30 p. m.","1 hora",8.5],
+        4:["8:00 a. m.","5:30 p. m.","1 hora",8.5],
+        5:["9:00 a. m.","5:30 p. m.","1 hora",7.5]
+      }
+    },
+    KALETH: {
+      label:"Malla especial Kaleth",
+      days:{
+        1:["7:30 a. m.","4:45 p. m.","1 hora",8.25],
+        2:["7:30 a. m.","5:00 p. m.","1 hora",8.5],
+        3:["7:30 a. m.","4:45 p. m.","1 hora",8.25],
+        4:["7:30 a. m.","5:00 p. m.","1 hora",8.5],
+        5:["7:30 a. m.","5:00 p. m.","1 hora",8.5]
+      }
+    },
+    SERGIO: {
+      label:"Malla especial Sergio",
+      days:{
+        1:["7:30 a. m.","4:00 p. m.","1 hora",7.5],
+        2:["7:30 a. m.","4:00 p. m.","1 hora",7.5],
+        3:["7:30 a. m.","4:00 p. m.","1 hora",7.5],
+        4:["7:30 a. m.","4:00 p. m.","1 hora",7.5],
+        5:["7:30 a. m.","4:00 p. m.","1 hora",7.5],
+        6:["7:30 a. m.","12:00 m.","Sin almuerzo",4.5]
+      }
+    },
+    MALLA_C: {
+      label:"Malla C · Vehiculares y auxiliares",
+      days:{
+        1:["7:30 a. m.","5:30 p. m.","1 hora",9],
+        2:["7:30 a. m.","5:30 p. m.","1 hora",9],
+        3:["7:30 a. m.","5:30 p. m.","1 hora",9],
+        4:["7:30 a. m.","5:30 p. m.","1 hora",9],
+        5:["7:30 a. m.","5:30 p. m.","1 hora",9],
+        6:["7:30 a. m.","1:30 p. m.","Sin almuerzo",6]
+      }
+    },
+    MALLA_D: {
+      label:"Malla D · Motorizados",
+      days:{
+        1:["7:30 a. m.","4:30 p. m.","1 hora",8],
+        2:["8:30 a. m.","5:30 p. m.","1 hora",8],
+        3:["8:30 a. m.","5:30 p. m.","1 hora",8],
+        4:["8:30 a. m.","5:30 p. m.","1 hora",8],
+        5:["8:30 a. m.","5:30 p. m.","1 hora",8],
+        6:["7:30 a. m.","1:30 p. m.","Sin almuerzo",6]
+      }
+    }
+  };
+
+  const $ = id => document.getElementById(id);
+  const startDate = parseISO(CONFIG.startDate);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  let activePerson = null;
+  let currentMonth = new Date(Math.max(today.getTime(), parseISO(CONFIG.initialMonth).getTime()));
+  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+  let selectedDate = new Date(Math.max(today.getTime(), startDate.getTime()));
+  let view = "month";
+  let failedAttempts = Number(sessionStorage.getItem("scheduleAttempts") || 0);
+
+  function parseISO(value) {
+    const [y,m,d] = value.split("-").map(Number);
+    return new Date(y,m-1,d);
+  }
+  function iso(date) {
+    const y=date.getFullYear(), m=String(date.getMonth()+1).padStart(2,"0"), d=String(date.getDate()).padStart(2,"0");
+    return `${y}-${m}-${d}`;
+  }
+  function mondayDay(date) {
+    const d=date.getDay();
+    return d===0 ? 7 : d;
+  }
+  function startOfWeek(date) {
+    const copy=new Date(date);
+    copy.setDate(copy.getDate()-(mondayDay(copy)-1));
+    copy.setHours(0,0,0,0);
+    return copy;
+  }
+  function weekIndex(date) {
+    return Math.floor((startOfWeek(date)-startOfWeek(startDate))/(7*86400000));
+  }
+  function patternFor(person,date) {
+    if (person.pattern === "PENDING") return "PENDING";
+    if (Array.isArray(person.pattern)) {
+      const idx=weekIndex(date);
+      return person.pattern[((idx%person.pattern.length)+person.pattern.length)%person.pattern.length];
+    }
+    return person.pattern;
+  }
+  function scheduleFor(person,date) {
+    const key=iso(date);
+    const weekday=mondayDay(date);
+    if (date < startDate) return {type:"NOT_STARTED",label:"Nueva jornada aún no vigente",status:"No aplica",note:"La vigencia comienza el lunes 3 de agosto de 2026."};
+    if (CONFIG.holidays[key]) return {type:"HOLIDAY",label:"Festivo",status:"Descanso remunerado",note:CONFIG.holidays[key]};
+    if (person.pattern === "PENDING") return {type:"PENDING",label:"Horario pendiente",status:"Pendiente de asignación",note:"La malla de esta persona no aparece definida en el informe oficial recibido."};
+    if (weekday===7) return {type:"REST",label:"Descanso",status:"Domingo",note:"Día de descanso."};
+    const pattern=patternFor(person,date);
+    const shift=SHIFTS[pattern];
+    const hours=shift?.days?.[weekday];
+    if (!hours) return {type:"REST",label:"Descanso",status:"No labora",pattern,patternLabel:shift?.label || ""};
+    const mondayNote = weekday===1 ? "Inicia a las 7:30 a. m. en la sede Acopi para la integración. Terminada la actividad, se dirige a su sede o punto habitual." : "";
+    return {
+      type:pattern,label:shift.label,status:"Labora",pattern,patternLabel:shift.label,
+      start:hours[0],end:hours[1],lunch:hours[2],hours:hours[3],
+      site:weekday===1 ? "Sede Acopi al iniciar; luego sede habitual" : person.site,
+      note:mondayNote
+    };
+  }
+  function formatDate(date,options={}) {
+    return new Intl.DateTimeFormat("es-CO",options).format(date);
+  }
+  async function sha256(text) {
+    const data=new TextEncoder().encode(text);
+    const digest=await crypto.subtle.digest("SHA-256",data);
+    return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,"0")).join("");
+  }
+  function sanitizeCc(value) { return value.replace(/\D/g,""); }
+
+  $("cc").addEventListener("input",e=>e.target.value=sanitizeCc(e.target.value));
+  $("loginForm").addEventListener("submit",async e=>{
+    e.preventDefault();
+    if (failedAttempts>=8) {
+      $("loginError").textContent="Demasiados intentos. Cierra y vuelve a abrir la página para intentar nuevamente.";
+      return;
+    }
+    const cc=sanitizeCc($("cc").value);
+    if (cc.length<6) {
+      $("loginError").textContent="Digita un número de cédula válido.";
+      return;
+    }
+    $("loginButton").disabled=true;
+    $("loginButton").textContent="Consultando…";
+    const hash=await sha256(cc);
+    const person=PEOPLE.find(p=>p.hash===hash);
+    $("loginButton").disabled=false;
+    $("loginButton").textContent="Consultar mi horario";
+    if (!person) {
+      failedAttempts++;
+      sessionStorage.setItem("scheduleAttempts",String(failedAttempts));
+      $("loginError").textContent="La cédula no está registrada en esta versión de la malla.";
+      $("cc").select();
+      return;
+    }
+    failedAttempts=0;
+    sessionStorage.removeItem("scheduleAttempts");
+    activePerson=person;
+    $("cc").value="";
+    openApp();
+  });
+
+  function openApp() {
+    $("loginScreen").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    $("profileName").textContent=activePerson.name;
+    $("topName").textContent=activePerson.name;
+    $("profileArea").textContent=activePerson.area;
+    $("profileRole").textContent=activePerson.role;
+    $("profileSite").textContent=activePerson.site;
+    if (activePerson.pattern==="PENDING") {
+      $("pendingNotice").classList.remove("hidden");
+      $("pendingNotice").textContent="Tu perfil ya está registrado, pero tu malla todavía no se encuentra definida en el informe de horarios suministrado. La administración debe asignarla antes de la publicación definitiva.";
+    } else {
+      $("pendingNotice").classList.add("hidden");
+    }
+    renderToday();
+    render();
+  }
+
+  $("logout").addEventListener("click",()=>{
+    activePerson=null;
+    $("app").classList.add("hidden");
+    $("loginScreen").classList.remove("hidden");
+    $("loginError").textContent="";
+    $("cc").focus();
+  });
+
+  function renderToday() {
+    const s=scheduleFor(activePerson,today);
+    $("todayShift").textContent=s.status==="Labora" ? `${s.start} – ${s.end}` : s.status;
+    $("todayDetail").textContent=s.status==="Labora" ? `${s.label} · ${s.site}` : (s.note||s.label);
+  }
+
+  function render() {
+    $("monthView").classList.toggle("hidden",view!=="month");
+    $("weekView").classList.toggle("hidden",view!=="week");
+    $("monthViewBtn").classList.toggle("active",view==="month");
+    $("weekViewBtn").classList.toggle("active",view==="week");
+    if(view==="month") renderMonth(); else renderWeek();
+  }
+
+  function renderMonth() {
+    $("periodLabel").textContent=formatDate(currentMonth,{month:"long",year:"numeric"});
+    const first=new Date(currentMonth.getFullYear(),currentMonth.getMonth(),1);
+    const days=new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1,0).getDate();
+    const leading=mondayDay(first)-1;
+    const nodes=[];
+    for(let i=0;i<leading;i++) nodes.push('<div class="day empty"></div>');
+    for(let d=1;d<=days;d++) {
+      const date=new Date(currentMonth.getFullYear(),currentMonth.getMonth(),d);
+      const s=scheduleFor(activePerson,date);
+      const isToday=iso(date)===iso(today);
+      const short=s.status==="Labora" ? s.label.replace("Malla ","").replace(" · Vehiculares y auxiliares","").replace(" · Motorizados","") : s.status;
+      const time=s.status==="Labora" ? `${s.start}–${s.end}` : "";
+      nodes.push(`<button class="day type-${s.type} ${isToday?"today":""}" data-date="${iso(date)}">
+        <span class="date-number">${d}</span>
+        <span class="shift-chip">${escapeHtml(short)}</span>
+        <span class="shift-time">${escapeHtml(time)}</span>
+      </button>`);
+    }
+    $("calendar").innerHTML=nodes.join("");
+    $("calendar").querySelectorAll("[data-date]").forEach(btn=>btn.addEventListener("click",()=>openDay(parseISO(btn.dataset.date))));
+  }
+
+  function renderWeek() {
+    const weekStart=startOfWeek(selectedDate);
+    const weekEnd=new Date(weekStart); weekEnd.setDate(weekEnd.getDate()+6);
+    $("periodLabel").textContent=`${formatDate(weekStart,{day:"numeric",month:"short"})} – ${formatDate(weekEnd,{day:"numeric",month:"short",year:"numeric"})}`;
+    const cards=[];
+    for(let i=0;i<7;i++) {
+      const date=new Date(weekStart); date.setDate(date.getDate()+i);
+      const s=scheduleFor(activePerson,date);
+      const lab=s.status==="Labora";
+      cards.push(`<button class="week-day type-${s.type} ${iso(date)===iso(selectedDate)?"selected":""}" data-date="${iso(date)}">
+        <div class="week-date">${formatDate(date,{weekday:"long",day:"numeric",month:"short"})}</div>
+        <span class="shift-chip">${escapeHtml(lab?s.label:s.status)}</span>
+        <div class="week-info">${lab?`<strong>${s.start} – ${s.end}</strong><br>Almuerzo: ${s.lunch}<br>${escapeHtml(s.site)}`:escapeHtml(s.note||s.label)}</div>
+      </button>`);
+    }
+    $("weekGrid").innerHTML=cards.join("");
+    $("weekGrid").querySelectorAll("[data-date]").forEach(btn=>btn.addEventListener("click",()=>{selectedDate=parseISO(btn.dataset.date);openDay(selectedDate);renderWeek();}));
+  }
+
+  $("monthViewBtn").addEventListener("click",()=>{view="month";render();});
+  $("weekViewBtn").addEventListener("click",()=>{view="week";selectedDate=new Date(Math.max(today.getTime(),startDate.getTime()));render();});
+  $("prevPeriod").addEventListener("click",()=>{
+    if(view==="month") currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()-1,1);
+    else selectedDate.setDate(selectedDate.getDate()-7);
+    render();
+  });
+  $("nextPeriod").addEventListener("click",()=>{
+    if(view==="month") currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1,1);
+    else selectedDate.setDate(selectedDate.getDate()+7);
+    render();
+  });
+
+  function openDay(date) {
+    const s=scheduleFor(activePerson,date);
+    $("modalDate").textContent=formatDate(date,{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+    const details = s.status==="Labora" ? [
+      ["Estado","Labora"],["Malla",s.label],["Entrada",s.start],["Salida",s.end],
+      ["Almuerzo",s.lunch],["Horas efectivas",String(s.hours).replace(".",",")+" h"],["Sede / punto",s.site]
+    ] : [["Estado",s.status],["Detalle",s.note||s.label]];
+    $("modalDetails").innerHTML=details.map(([label,value])=>`<div class="detail"><div class="detail-label">${escapeHtml(label)}</div><div class="detail-value">${escapeHtml(value)}</div></div>`).join("");
+    if(s.note && s.status==="Labora") {
+      $("modalNote").textContent=s.note;
+      $("modalNote").classList.remove("hidden");
+    } else $("modalNote").classList.add("hidden");
+    $("modalBackdrop").classList.remove("hidden");
+  }
+  function closeModal() {$("modalBackdrop").classList.add("hidden");}
+  $("closeModal").addEventListener("click",closeModal);
+  $("modalBackdrop").addEventListener("click",e=>{if(e.target===$("modalBackdrop"))closeModal();});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+
+  function escapeHtml(value) {
+    return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[ch]));
+  }
+})();
+</script>
+</body>
+</html>
