@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#d91f26">
+  <title>Gestión de horarios | Grupo Cadaya</title>
+  <link rel="stylesheet" href="gestion.css">
+</head>
+<body>
+  <section id="loginScreen" class="login">
+    <div class="login-card">
+      <img class="logo" src="../logo_cadaya.png" alt="Grupo Cadaya">
+      <div class="eyebrow">Acceso autorizado</div>
+      <h1>Gestión de horarios</h1>
+      <p class="copy">Consulta las mallas de todos los colaboradores. El acceso de administración permite preparar y exportar la programación mensual.</p>
+      <form id="loginForm" autocomplete="off">
+        <label class="label" for="cc">Número de cédula</label>
+        <input id="cc" class="input" type="password" inputmode="numeric" maxlength="12" placeholder="Solo números" required>
+        <label class="label" for="pin">PIN</label>
+        <input id="pin" class="input" type="password" inputmode="numeric" maxlength="6" placeholder="PIN asignado" required>
+        <button id="loginButton" class="primary full" type="submit">Ingresar</button>
+        <div id="loginError" class="error"></div>
+      </form>
+      <p class="note">Versión temporal en GitHub Pages. Los accesos se validan mediante huellas criptográficas, pero una página estática no reemplaza la seguridad de AXORA.</p>
+    </div>
+  </section>
+
+  <main id="app" class="hidden">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <img src="../logo_cadaya.png" alt="Grupo Cadaya">
+          <div><strong>Gestión de horarios</strong><small id="userName"></small></div>
+        </div>
+        <div class="top-actions">
+          <span id="roleBadge" class="role-badge"></span>
+          <button id="logout" class="secondary">Salir</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="layout">
+        <aside class="panel">
+          <h3 class="section-title">Colaboradores</h3>
+          <input id="employeeSearch" class="input" type="search" placeholder="Buscar por nombre o área">
+          <div id="employeeList" class="employee-list"></div>
+
+          <section id="adminPanel" class="admin-box hidden">
+            <h3 class="section-title">Edición mensual</h3>
+            <label class="mini-label" for="monthInput">Mes</label>
+            <input id="monthInput" class="small-input" type="month">
+            <label class="mini-label" for="startDateInput">Lunes de la Semana 1</label>
+            <input id="startDateInput" class="small-input" type="date">
+            <div id="weekEditors" class="admin-grid"></div>
+
+            <h4>Festivos</h4>
+            <div id="holidayList" class="holiday-list"></div>
+            <div class="holiday-row">
+              <input id="holidayDate" class="small-input" type="date">
+              <input id="holidayName" class="small-input" type="text" placeholder="Nombre del festivo">
+              <button id="addHoliday" class="secondary" type="button">Agregar</button>
+            </div>
+
+            <div class="action-row">
+              <button id="saveLocal" class="primary" type="button">Guardar en este equipo</button>
+              <button id="exportConfig" class="secondary" type="button">Exportar JSON</button>
+              <label class="secondary" for="importConfig">Importar JSON</label>
+              <input id="importConfig" class="hidden" type="file" accept="application/json,.json">
+              <button id="resetConfig" class="danger" type="button">Restaurar publicado</button>
+            </div>
+            <div class="admin-only-note">Los cambios guardados aquí solo quedan en este navegador. Para publicarlos a todos, exporta el JSON y súbelo a GitHub o envíamelo para actualizar la página.</div>
+          </section>
+        </aside>
+
+        <section class="content">
+          <div class="profile">
+            <div>
+              <div class="eyebrow">GRUPO CADAYA SAS</div>
+              <h2 id="profileName"></h2>
+              <div class="pills">
+                <span id="profileArea" class="pill"></span>
+                <span id="profileRole" class="pill"></span>
+                <span id="profileSite" class="pill"></span>
+              </div>
+            </div>
+            <div class="coverage">
+              <span>Programación del mes</span>
+              <strong id="monthlyHours">0 horas</strong>
+              <span id="monthlyDays"></span>
+            </div>
+          </div>
+
+          <div id="warning" class="warning hidden"></div>
+
+          <div class="toolbar">
+            <div class="nav">
+              <button id="prevPeriod" aria-label="Periodo anterior">‹</button>
+              <div id="periodLabel" class="period"></div>
+              <button id="nextPeriod" aria-label="Periodo siguiente">›</button>
+            </div>
+            <div class="toggle">
+              <button id="monthViewBtn" class="active" type="button">Mes</button>
+              <button id="weekViewBtn" type="button">Semana</button>
+            </div>
+          </div>
+
+          <section id="monthView" class="content-card">
+            <div class="weekdays">
+              <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div><div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+            </div>
+            <div id="calendar" class="calendar"></div>
+          </section>
+
+          <section id="weekView" class="content-card hidden">
+            <div id="weekGrid" class="week-grid"></div>
+          </section>
+
+          <div class="footer">Todos los lunes el personal inicia a las 7:30 a. m. en la sede Acopi para la integración. Al finalizar, cada persona se dirige a su sede o punto habitual.</div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div id="modalBg" class="modal-bg hidden">
+    <article class="modal">
+      <div class="modal-head">
+        <div><div class="eyebrow">Detalle del turno</div><h3 id="modalDate"></h3></div>
+        <button id="closeModal" class="close" type="button">×</button>
+      </div>
+      <div id="modalDetails" class="detail-grid"></div>
+      <div id="modalNote" class="status hidden"></div>
+    </article>
+  </div>
+
+  <script src="gestion-data.js"></script>
+  <script src="gestion.js"></script>
+</body>
+</html>
