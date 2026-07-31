@@ -1,105 +1,44 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="robots" content="noindex,nofollow,noarchive">
-  <meta name="theme-color" content="#d91f26">
-  <title>Gestión de horarios por áreas | Grupo Cadaya</title>
-  <style>
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f5f7}
-    iframe{display:block;width:100%;height:100%;border:0;background:#f4f5f7}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#d91f26">
+<title>Gestión de horarios por áreas | Grupo Cadaya</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f5f7}iframe{display:block;width:100%;height:100%;border:0;background:#f4f5f7}</style>
 </head>
 <body>
-  <iframe id="gestionFrame" src="../gestion.html" title="Gestión de horarios de Grupo Cadaya"></iframe>
-  <script>
-    (() => {
-      "use strict";
-
-      const frame = document.getElementById("gestionFrame");
-
-      function installAreaFilter() {
-        const win = frame.contentWindow;
-        const doc = frame.contentDocument;
-        const search = doc?.getElementById("employeeSearch");
-        const list = doc?.getElementById("employeeList");
-        const source = win?.CADAYA_SCHEDULE_DATA;
-        if (!search || !list || !source?.people) return;
-        if (doc.getElementById("areaFilter")) return;
-
-        const label = doc.createElement("label");
-        label.className = "mini-label";
-        label.setAttribute("for", "areaFilter");
-        label.textContent = "Área";
-
-        const select = doc.createElement("select");
-        select.id = "areaFilter";
-        select.className = "input";
-        select.setAttribute("aria-label", "Filtrar colaboradores por área");
-
-        const all = doc.createElement("option");
-        all.value = "";
-        all.textContent = "Todas las áreas";
-        select.appendChild(all);
-
-        const areas = [...new Set(source.people.map(person => String(person.area || "Sin área").trim()))]
-          .sort((a,b) => a.localeCompare(b,"es",{sensitivity:"base"}));
-
-        areas.forEach(area => {
-          const option = doc.createElement("option");
-          option.value = area;
-          option.textContent = area;
-          select.appendChild(option);
-        });
-
-        search.parentNode.insertBefore(label, search);
-        search.parentNode.insertBefore(select, search);
-        search.placeholder = "Buscar colaborador por nombre o cargo";
-        search.setAttribute("aria-label", "Buscar colaborador por nombre o cargo");
-
-        function applyFilters() {
-          const area = select.value.trim().toUpperCase();
-          const buttons = [...list.querySelectorAll(".employee")];
-          buttons.forEach(button => {
-            const meta = button.querySelector("span")?.textContent || "";
-            const employeeArea = meta.split(" · ")[0].trim().toUpperCase();
-            button.style.display = !area || employeeArea === area ? "" : "none";
-          });
-
-          const visible = buttons.filter(button => button.style.display !== "none");
-          let empty = list.querySelector(".area-empty-message");
-          if (!visible.length) {
-            if (!empty) {
-              empty = doc.createElement("div");
-              empty.className = "area-empty-message";
-              empty.style.cssText = "padding:14px;text-align:center;color:#6b7280;font-size:13px;border:1px dashed #d1d5db;border-radius:12px;margin-top:8px";
-              list.appendChild(empty);
-            }
-            empty.textContent = "No hay colaboradores que coincidan con el área y la búsqueda seleccionadas.";
-          } else if (empty) {
-            empty.remove();
-          }
-        }
-
-        select.addEventListener("change", applyFilters);
-        search.addEventListener("input", () => setTimeout(applyFilters,0));
-
-        const observer = new MutationObserver(() => applyFilters());
-        observer.observe(list,{childList:true});
-        applyFilters();
-      }
-
-      frame.addEventListener("load", () => {
-        installAreaFilter();
-        const doc = frame.contentDocument;
-        const app = doc?.getElementById("app");
-        if (app) {
-          const observer = new MutationObserver(() => installAreaFilter());
-          observer.observe(app,{attributes:true,subtree:true,attributeFilter:["class"]});
-        }
-      });
-    })();
-  </script>
+<iframe id="gestionFrame" src="../gestion.html" title="Gestión de horarios de Grupo Cadaya"></iframe>
+<script>
+(()=>{"use strict";
+const MIGRATION_KEY="cadaya_horarios_publicados_1_1_1";
+if(!localStorage.getItem(MIGRATION_KEY)){
+  localStorage.removeItem("cadaya_horarios_gestion_v1");
+  localStorage.setItem(MIGRATION_KEY,"1");
+}
+const frame=document.getElementById("gestionFrame");
+function installAreaFilter(){
+  const win=frame.contentWindow,doc=frame.contentDocument;
+  const search=doc?.getElementById("employeeSearch"),list=doc?.getElementById("employeeList"),source=win?.CADAYA_SCHEDULE_DATA;
+  if(!search||!list||!source?.people||doc.getElementById("areaFilter"))return;
+  const label=doc.createElement("label");label.className="mini-label";label.htmlFor="areaFilter";label.textContent="Área";
+  const select=doc.createElement("select");select.id="areaFilter";select.className="input";select.setAttribute("aria-label","Filtrar colaboradores por área");
+  const all=doc.createElement("option");all.value="";all.textContent="Todas las áreas";select.appendChild(all);
+  [...new Set(source.people.map(p=>String(p.area||"Sin área").trim()))].sort((a,b)=>a.localeCompare(b,"es",{sensitivity:"base"})).forEach(area=>{const option=doc.createElement("option");option.value=area;option.textContent=area;select.appendChild(option)});
+  search.parentNode.insertBefore(label,search);search.parentNode.insertBefore(select,search);search.placeholder="Buscar colaborador por nombre o cargo";
+  function apply(){
+    const area=select.value.trim().toUpperCase();
+    const buttons=[...list.querySelectorAll(".employee")];
+    buttons.forEach(button=>{const meta=button.querySelector("span")?.textContent||"";const employeeArea=meta.split(" · ")[0].trim().toUpperCase();button.style.display=!area||employeeArea===area?"":"none"});
+    let empty=list.querySelector(".area-empty-message");const visible=buttons.some(button=>button.style.display!=="none");
+    if(!visible){if(!empty){empty=doc.createElement("div");empty.className="area-empty-message";empty.style.cssText="padding:14px;text-align:center;color:#6b7280;font-size:13px;border:1px dashed #d1d5db;border-radius:12px;margin-top:8px";list.appendChild(empty)}empty.textContent="No hay colaboradores que coincidan con el área y la búsqueda seleccionadas."}else empty?.remove();
+  }
+  select.addEventListener("change",apply);search.addEventListener("input",()=>setTimeout(apply,0));
+  new win.MutationObserver(apply).observe(list,{childList:true});apply();
+}
+frame.addEventListener("load",()=>{let attempts=0;const timer=setInterval(()=>{installAreaFilter();if(frame.contentDocument?.getElementById("areaFilter")||++attempts>40)clearInterval(timer)},100)});
+})();
+</script>
 </body>
 </html>
