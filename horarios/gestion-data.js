@@ -1,5 +1,5 @@
 window.CADAYA_SCHEDULE_DATA = {
-  version: "1.1.0",
+  version: "1.1.1",
   config: {
     month: "2026-08",
     startDate: "2026-08-03",
@@ -96,12 +96,12 @@ window.CADAYA_SCHEDULE_DATA = {
     }
   },
   people: [
-    {name:"CAMILO ANDRES POTES LOZANO",area:"Área Comercial",role:"Asesor Comercial",site:"Sede habitual",weeks:["PENDING","PENDING","PENDING","PENDING","PENDING","PENDING"]},
-    {name:"ELIZABETH TAMAYO LOPEZ",area:"Área Comercial",role:"Asesora Comercial",site:"Sede habitual",weeks:["PENDING","PENDING","PENDING","PENDING","PENDING","PENDING"]},
-    {name:"LAURENT DANIEL ARENAS ALZATE",area:"Área Comercial",role:"Asesor Comercial",site:"Sede habitual",weeks:["PENDING","PENDING","PENDING","PENDING","PENDING","PENDING"]},
-    {name:"LIZETH ASTRID ARANA LOPEZ",area:"Área Comercial",role:"Asesora Comercial",site:"Sede habitual",weeks:["PENDING","PENDING","PENDING","PENDING","PENDING","PENDING"]},
-    {name:"LUISA MARIA ZUNIGA",area:"Área Comercial",role:"Asesora Comercial",site:"Sede habitual",weeks:["PENDING","PENDING","PENDING","PENDING","PENDING","PENDING"]},
-    {name:"MARIA LIZANA SÁNCHEZ CASTAÑEDA",area:"Área Comercial",role:"Asesora Comercial",site:"Sede habitual",weeks:["PENDING","PENDING","PENDING","PENDING","PENDING","PENDING"]},
+    {name:"CAMILO ANDRES POTES LOZANO",area:"Área Comercial",role:"Asesor Comercial",site:"Sede habitual",weeks:["CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB"]},
+    {name:"ELIZABETH TAMAYO LOPEZ",area:"Área Comercial",role:"Asesora Comercial",site:"Sede habitual",weeks:["CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB"]},
+    {name:"LAURENT DANIEL ARENAS ALZATE",area:"Área Comercial",role:"Asesor Comercial",site:"Sede habitual",weeks:["CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB"]},
+    {name:"LIZETH ASTRID ARANA LOPEZ",area:"Área Comercial",role:"Asesora Comercial",site:"Sede habitual",weeks:["CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB"]},
+    {name:"LUISA MARIA ZUNIGA",area:"Área Comercial",role:"Asesora Comercial",site:"Sede habitual",weeks:["CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB"]},
+    {name:"MARIA LIZANA SÁNCHEZ CASTAÑEDA",area:"Área Comercial",role:"Asesora Comercial",site:"Sede habitual",weeks:["CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB"]},
     {name:"DIANA LORENA MORENO SALCEDO",area:"Facturación",role:"Asistente Administrativa",site:"Ingenio",weeks:["CON_SAB","SIN_SAB","CON_SAB","SIN_SAB","CON_SAB","SIN_SAB"]},
     {name:"YAMILETH MORALES ESCOBAR",area:"Tesorería y Recaudo",role:"Tesorería",site:"Ingenio",weeks:["SIN_SAB","CON_SAB","SIN_SAB","CON_SAB","SIN_SAB","CON_SAB"]},
     {name:"KALETH DAVID GARCIA MORENO",area:"Facturación",role:"Facturador Ingenio",site:"Ingenio",weeks:["KALETH","KALETH","KALETH","KALETH","KALETH","KALETH"]},
