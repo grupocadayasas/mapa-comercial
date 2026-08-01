@@ -1,5 +1,5 @@
 window.CADAYA_SCHEDULE_DATA = {
-  version: "1.1.1",
+  version: "1.1.3",
   config: {
     month: "2026-08",
     startDate: "2026-08-03",
@@ -104,8 +104,8 @@ window.CADAYA_SCHEDULE_DATA = {
     {name:"MARIA LIZANA SÁNCHEZ CASTAÑEDA",area:"Área Comercial",role:"Asesora Comercial",site:"Sede habitual",weeks:["CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB","CON_SAB"]},
     {name:"DIANA LORENA MORENO SALCEDO",area:"Facturación",role:"Asistente Administrativa",site:"Ingenio",weeks:["CON_SAB","SIN_SAB","CON_SAB","SIN_SAB","CON_SAB","SIN_SAB"]},
     {name:"YAMILETH MORALES ESCOBAR",area:"Tesorería y Recaudo",role:"Tesorería",site:"Ingenio",weeks:["SIN_SAB","CON_SAB","SIN_SAB","CON_SAB","SIN_SAB","CON_SAB"]},
-    {name:"KALETH DAVID GARCIA MORENO",area:"Facturación",role:"Facturador Ingenio",site:"Ingenio",weeks:["KALETH","KALETH","KALETH","KALETH","KALETH","KALETH"]},
-    {name:"DAVID ALEJANDRO ARANGO SILVA",area:"Facturación",role:"Facturador Acopi",site:"Acopi",weeks:["SIN_SAB","CON_SAB","SIN_SAB","CON_SAB","SIN_SAB","CON_SAB"]},
+    {name:"KALETH DAVID GARCIA MORENO",area:"Facturación",role:"Facturador Acopi",site:"Acopi",weeks:["KALETH","KALETH","KALETH","KALETH","KALETH","KALETH"]},
+    {name:"DAVID ALEJANDRO ARANGO SILVA",area:"Facturación",role:"Facturador Ingenio",site:"Ingenio",weeks:["SIN_SAB","CON_SAB","SIN_SAB","CON_SAB","SIN_SAB","CON_SAB"]},
     {name:"SERGIO DUVAL HOYOS CAICEDO",area:"Tesorería y Recaudo",role:"Auxiliar Contable",site:"Ingenio",weeks:["SERGIO","SIN_SAB","SERGIO","SIN_SAB","SERGIO","SIN_SAB"]},
     {name:"ALEXANDER MARTINEZ DIAZ",area:"Distribución vehicular y auxiliares",role:"Operador de distribución vehicular",site:"Punto habitual / ruta",weeks:["MALLA_C","MALLA_C","MALLA_C","MALLA_C","MALLA_C","MALLA_C"]},
     {name:"CARLOS CASTRO GONZALEZ",area:"Distribución vehicular y auxiliares",role:"Auxiliar de distribución",site:"Punto habitual / ruta",weeks:["MALLA_C","MALLA_C","MALLA_C","MALLA_C","MALLA_C","MALLA_C"]},
