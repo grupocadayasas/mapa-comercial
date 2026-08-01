@@ -12,12 +12,21 @@
 <iframe id="gestionFrame" src="../gestion.html" title="Gestión de horarios de Grupo Cadaya"></iframe>
 <script>
 (()=>{"use strict";
-const MIGRATION_KEY="cadaya_horarios_publicados_1_1_1";
+const MIGRATION_KEY="cadaya_horarios_publicados_1_1_2";
 if(!localStorage.getItem(MIGRATION_KEY)){
   localStorage.removeItem("cadaya_horarios_gestion_v1");
   localStorage.setItem(MIGRATION_KEY,"1");
 }
 const frame=document.getElementById("gestionFrame");
+function installExecutiveAccess(){
+  const source=frame.contentWindow?.CADAYA_SCHEDULE_DATA;
+  if(!source?.access)return false;
+  const credentialHash="a448c135217bbda0c3a05930245f3caabc23ad6b1a208468246088b7674a2e1f";
+  if(!source.access.some(item=>item.credentialHash===credentialHash)){
+    source.access.push({name:"ELIANA MARIA AYALA SAAVEDRA",role:"viewer",credentialHash});
+  }
+  return true;
+}
 function installAreaFilter(){
   const win=frame.contentWindow,doc=frame.contentDocument;
   const search=doc?.getElementById("employeeSearch"),list=doc?.getElementById("employeeList"),source=win?.CADAYA_SCHEDULE_DATA;
@@ -37,7 +46,7 @@ function installAreaFilter(){
   select.addEventListener("change",apply);search.addEventListener("input",()=>setTimeout(apply,0));
   new win.MutationObserver(apply).observe(list,{childList:true});apply();
 }
-frame.addEventListener("load",()=>{let attempts=0;const timer=setInterval(()=>{installAreaFilter();if(frame.contentDocument?.getElementById("areaFilter")||++attempts>40)clearInterval(timer)},100)});
+frame.addEventListener("load",()=>{let attempts=0;const timer=setInterval(()=>{const accessReady=installExecutiveAccess();installAreaFilter();if((accessReady&&frame.contentDocument?.getElementById("areaFilter"))||++attempts>40)clearInterval(timer)},100)});
 })();
 </script>
 </body>
