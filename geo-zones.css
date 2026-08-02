@@ -1,0 +1,45 @@
+.cadaya-zone-control {
+    background: transparent;
+    box-shadow: 0 5px 18px rgba(20, 27, 38, .18);
+    border: 0;
+}
+
+.cadaya-zone-control button {
+    min-width: 74px;
+    height: 38px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 9px;
+    background: rgba(255,255,255,.96);
+    color: #263238;
+    font: 700 13px/1 Arial, Helvetica, sans-serif;
+    cursor: pointer;
+}
+
+.cadaya-zone-control button:hover,
+.cadaya-zone-control button.active {
+    background: #c8102e;
+    color: #fff;
+}
+
+.zone-method-note {
+    margin: -2px 0 12px;
+    color: #6d7580;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.popup-grid strong {
+    color: #b90016;
+}
+
+@media (max-width: 920px) {
+    .cadaya-zone-control {
+        margin-top: 62px !important;
+    }
+
+    .cadaya-zone-control button {
+        min-width: 66px;
+        height: 36px;
+    }
+}
