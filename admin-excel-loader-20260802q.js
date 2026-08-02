@@ -1,6 +1,9 @@
 'use strict';
 
 (function loadCadayaExcelAdminAlwaysVisible() {
+    if (window.__cadayaExcelAdminLoaderQ) return;
+    window.__cadayaExcelAdminLoaderQ = true;
+
     if (!document.querySelector('link[href*="admin-excel-20260802p.css"]')) {
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
