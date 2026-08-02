@@ -1,0 +1,31 @@
+/* Administrador de Excel para perfiles administrativos */
+.excel-admin-section{overflow:hidden;border:1px solid rgba(200,16,46,.2);border-radius:14px;background:linear-gradient(180deg,#fff,#fffafb)}
+.excel-admin-section>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;list-style:none;color:#39404b;font-size:12px;font-weight:850;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;user-select:none}
+.excel-admin-section>summary::-webkit-details-marker{display:none}
+.excel-admin-section>summary::after{content:'⌄';display:grid;place-items:center;width:25px;height:25px;border-radius:8px;color:#fff;background:var(--brand);font-size:16px;line-height:1;transition:transform .2s ease}
+.excel-admin-section[open]>summary::after{transform:rotate(180deg)}
+.excel-admin-summary{margin-left:auto;color:var(--brand);font-size:9px;letter-spacing:0;text-transform:none}
+.excel-admin-content{padding:13px;border-top:1px solid rgba(200,16,46,.14)}
+.excel-admin-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+.excel-admin-actions-secondary{margin-top:10px}
+.excel-admin-actions button{min-height:42px;padding:8px 10px}
+.excel-validation-result{margin-top:12px}
+.excel-empty,.excel-loading{margin:0;padding:12px;border:1px dashed #d8dde5;border-radius:11px;color:var(--muted);background:#fff;font-size:11px;text-align:center}
+.excel-validation-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.excel-validation-summary>div{min-width:0;padding:9px 7px;border:1px solid var(--line);border-radius:10px;background:#fff;text-align:center}
+.excel-validation-summary strong{display:block;color:var(--ink);font-size:18px;line-height:1}
+.excel-validation-summary span{display:block;margin-top:4px;color:var(--muted);font-size:9px;text-transform:uppercase}
+.excel-validation-summary.is-valid>div:first-child{border-color:rgba(22,101,52,.2);background:#f0fdf4}
+.excel-validation-summary.has-errors>div:first-child{border-color:rgba(155,28,28,.2);background:#fff5f5}
+.excel-validation-status{margin:10px 0 0;padding:10px 11px;border-radius:10px;font-size:11px;font-weight:750;line-height:1.45}
+.excel-validation-status.is-valid{color:#166534;background:#dcfce7}
+.excel-validation-status.has-errors{color:#9b1c1c;background:#fee2e2}
+.excel-issues{margin-top:9px;padding:10px 11px;border-radius:10px;font-size:10px;line-height:1.45}
+.excel-issues strong{display:block;margin-bottom:5px;font-size:11px}
+.excel-issues ul{max-height:155px;overflow:auto;margin:0;padding-left:18px}
+.excel-issues li+li{margin-top:4px}
+.excel-issues-error{color:#8a1c1c;background:#fff1f2}
+.excel-issues-warning{color:#7a4d00;background:#fff7d6}
+.excel-session-warning{margin:10px 0 0;color:#68707d;font-size:10px;line-height:1.45}
+.excel-admin-section button:disabled{opacity:.42;cursor:not-allowed}
+@media(max-width:920px){.excel-admin-actions{grid-template-columns:1fr}.excel-validation-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
