@@ -1,7 +1,6 @@
 'use strict';
 
 const OFFICIAL_FEATURE_SERVICE = 'https://geoportal.cali.gov.co/agserver/rest/services/IDESC/dapm_capas_base_202309281633/FeatureServer';
-const ESRI_LEAFLET_URL = 'https://unpkg.com/esri-leaflet@3.0.15/dist/esri-leaflet.js';
 
 const macroZoneColors = {
     'Norte': '#1565c0',
@@ -17,37 +16,18 @@ const officialCommuneLayer = L.layerGroup();
 const commercialMacroZoneLayer = L.layerGroup();
 
 const mapLayerControl = L.control.layers(null, {
-    'Barrios oficiales · IDESC': officialNeighborhoodLayer,
-    'Comunas oficiales · IDESC': officialCommuneLayer,
+    'Barrios · IDESC / respaldo Cadaya': officialNeighborhoodLayer,
+    'Comunas · IDESC / respaldo Cadaya': officialCommuneLayer,
     'Macrozonas comerciales · Cadaya': commercialMacroZoneLayer
 }, {
     position: 'topright',
     collapsed: true
 }).addTo(map);
 
-function loadExternalScriptOnce(src) {
-    return new Promise((resolve, reject) => {
-        if (window.L?.esri?.featureLayer) {
-            resolve();
-            return;
-        }
-
-        const existing = document.querySelector(`script[src="${src}"]`);
-        if (existing) {
-            existing.addEventListener('load', resolve, { once: true });
-            existing.addEventListener('error', reject, { once: true });
-            return;
-        }
-
-        const script = document.createElement('script');
-        script.src = src;
-        script.async = true;
-        script.crossOrigin = 'anonymous';
-        script.addEventListener('load', resolve, { once: true });
-        script.addEventListener('error', reject, { once: true });
-        document.head.appendChild(script);
-    });
-}
+const layerLoadState = {
+    neighborhoods: 'idle',
+    communes: 'idle'
+};
 
 function updateLayerStatus(message, warning = false) {
     const status = document.getElementById('mapStatus');
@@ -55,100 +35,23 @@ function updateLayerStatus(message, warning = false) {
     status.innerHTML = `<span class="status-dot${warning ? ' status-dot-warning' : ''}"></span><span>${message}</span>`;
 }
 
-function bindOfficialTooltip(layer, text) {
-    if (!layer || !text) return;
-    layer.bindTooltip(text, {
-        sticky: true,
-        direction: 'top',
-        className: 'official-layer-tooltip'
-    });
-}
-
-function initializeOfficialFeatureLayers() {
-    const neighborhoods = L.esri.featureLayer({
-        url: `${OFFICIAL_FEATURE_SERVICE}/3`,
-        where: '1=1',
-        simplifyFactor: 0.35,
-        precision: 5,
-        minZoom: 11,
-        style: () => ({
-            color: '#2563a9',
-            weight: 1.15,
-            opacity: 0.92,
-            fillColor: '#2563a9',
-            fillOpacity: 0.018
-        })
-    });
-
-    neighborhoods.on('createfeature', event => {
-        const properties = event.feature?.properties || {};
-        const comuna = properties.comuna ? ` · Comuna ${properties.comuna}` : '';
-        bindOfficialTooltip(event.layer, `${properties.barrio || 'Barrio'}${comuna}`);
-    });
-    neighborhoods.on('requesterror', event => {
-        console.warn('Error al cargar barrios oficiales.', event);
-        if (map.hasLayer(officialNeighborhoodLayer)) {
-            updateLayerStatus('La capa oficial de barrios no respondió. Los puntos comerciales siguen disponibles.', true);
-        }
-    });
-    neighborhoods.addTo(officialNeighborhoodLayer);
-
-    const communes = L.esri.featureLayer({
-        url: `${OFFICIAL_FEATURE_SERVICE}/2`,
-        where: '1=1',
-        simplifyFactor: 0.2,
-        precision: 5,
-        minZoom: 10,
-        style: () => ({
-            color: '#c8102e',
-            weight: 2.1,
-            opacity: 0.9,
-            fillColor: '#c8102e',
-            fillOpacity: 0.025
-        })
-    });
-
-    communes.on('createfeature', event => {
-        const properties = event.feature?.properties || {};
-        bindOfficialTooltip(event.layer, `Comuna ${properties.comuna || properties.nombre || ''}`.trim());
-    });
-    communes.on('requesterror', event => {
-        console.warn('Error al cargar comunas oficiales.', event);
-        if (map.hasLayer(officialCommuneLayer)) {
-            updateLayerStatus('La capa oficial de comunas no respondió. Los puntos comerciales siguen disponibles.', true);
-        }
-    });
-    communes.addTo(officialCommuneLayer);
-}
-
-loadExternalScriptOnce(ESRI_LEAFLET_URL)
-    .then(initializeOfficialFeatureLayers)
-    .catch(error => {
-        console.warn('No fue posible iniciar las capas oficiales vectoriales.', error);
-        officialNeighborhoodLayer._cadayaUnavailable = true;
-        officialCommuneLayer._cadayaUnavailable = true;
-    });
-
 function convexHull(points) {
-    if (points.length <= 2) return points;
-    const sorted = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const unique = [...new Map(points.map(point => [`${point[0].toFixed(7)}:${point[1].toFixed(7)}`, point])).values()];
+    if (unique.length <= 2) return unique;
+    const sorted = [...unique].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
     const cross = (origin, a, b) =>
         (a[0] - origin[0]) * (b[1] - origin[1])
         - (a[1] - origin[1]) * (b[0] - origin[0]);
 
     const lower = [];
     sorted.forEach(point => {
-        while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], point) <= 0) {
-            lower.pop();
-        }
+        while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], point) <= 0) lower.pop();
         lower.push(point);
     });
 
     const upper = [];
     [...sorted].reverse().forEach(point => {
-        while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], point) <= 0) {
-            upper.pop();
-        }
+        while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], point) <= 0) upper.pop();
         upper.push(point);
     });
 
@@ -156,6 +59,210 @@ function convexHull(points) {
     upper.pop();
     return lower.concat(upper);
 }
+
+function waitForClients(timeout = 8000) {
+    return new Promise(resolve => {
+        const started = Date.now();
+        const check = () => {
+            if (window.state?.clients?.length || (typeof state !== 'undefined' && state.clients?.length)) {
+                resolve(typeof state !== 'undefined' ? state.clients : window.state.clients);
+                return;
+            }
+            if (Date.now() - started >= timeout) {
+                resolve([]);
+                return;
+            }
+            setTimeout(check, 120);
+        };
+        check();
+    });
+}
+
+function createCoverageShape(items, options) {
+    const points = items.map(item => [item.lon, item.lat]);
+    const hull = convexHull(points);
+    const color = options.color;
+
+    if (hull.length >= 3) {
+        return L.polygon(hull.map(([lon, lat]) => [lat, lon]), {
+            color,
+            weight: options.weight,
+            opacity: 0.9,
+            fillColor: color,
+            fillOpacity: options.fillOpacity,
+            smoothFactor: 1.2
+        });
+    }
+
+    const centerLat = items.reduce((sum, item) => sum + item.lat, 0) / items.length;
+    const centerLon = items.reduce((sum, item) => sum + item.lon, 0) / items.length;
+    return L.circle([centerLat, centerLon], {
+        radius: options.radius,
+        color,
+        weight: options.weight,
+        opacity: 0.9,
+        fillColor: color,
+        fillOpacity: options.fillOpacity
+    });
+}
+
+async function buildNeighborhoodFallback() {
+    const clients = await waitForClients();
+    officialNeighborhoodLayer.clearLayers();
+    if (!clients.length) return;
+
+    const grouped = clients.reduce((acc, client) => {
+        const name = client.neighborhood || 'Sin barrio';
+        (acc[name] ||= []).push(client);
+        return acc;
+    }, {});
+
+    Object.entries(grouped).forEach(([name, items]) => {
+        const shape = createCoverageShape(items, {
+            color: '#2563a9',
+            weight: 1.25,
+            fillOpacity: 0.035,
+            radius: 290
+        });
+        const communes = [...new Set(items.map(item => item.commune).filter(Boolean))]
+            .map(value => `Comuna ${value}`)
+            .join(', ');
+        shape.bindTooltip(
+            `<strong>${escapeHtml(name)}</strong>${communes ? `<br>${escapeHtml(communes)}` : ''}<br><small>Cobertura aproximada según clientes Cadaya</small>`,
+            { sticky: true, className: 'official-layer-tooltip' }
+        );
+        shape.addTo(officialNeighborhoodLayer);
+    });
+
+    layerLoadState.neighborhoods = 'fallback';
+    updateLayerStatus('Barrios visibles mediante cobertura aproximada de los clientes Cadaya.', true);
+}
+
+async function buildCommuneFallback() {
+    const clients = await waitForClients();
+    officialCommuneLayer.clearLayers();
+    if (!clients.length) return;
+
+    const grouped = clients.reduce((acc, client) => {
+        const name = client.commune ? `Comuna ${client.commune}` : 'Sin comuna';
+        (acc[name] ||= []).push(client);
+        return acc;
+    }, {});
+
+    Object.entries(grouped).forEach(([name, items]) => {
+        const shape = createCoverageShape(items, {
+            color: '#c8102e',
+            weight: 2.1,
+            fillOpacity: 0.025,
+            radius: 780
+        });
+        shape.bindTooltip(
+            `<strong>${escapeHtml(name)}</strong><br><small>Cobertura aproximada según clientes Cadaya</small>`,
+            { sticky: true, className: 'official-layer-tooltip' }
+        );
+        shape.addTo(officialCommuneLayer);
+    });
+
+    layerLoadState.communes = 'fallback';
+    updateLayerStatus('Comunas visibles mediante cobertura aproximada de los clientes Cadaya.', true);
+}
+
+async function fetchOfficialGeoJson(layerNumber, fields) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6500);
+    const params = new URLSearchParams({
+        where: '1=1',
+        outFields: fields,
+        returnGeometry: 'true',
+        outSR: '4326',
+        f: 'geojson'
+    });
+
+    try {
+        const response = await fetch(`${OFFICIAL_FEATURE_SERVICE}/${layerNumber}/query?${params.toString()}`, {
+            mode: 'cors',
+            cache: 'force-cache',
+            signal: controller.signal
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const geojson = await response.json();
+        if (!geojson?.features?.length) throw new Error('La capa no devolvió polígonos.');
+        return geojson;
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
+async function ensureNeighborhoodLayer() {
+    if (layerLoadState.neighborhoods !== 'idle') return;
+    layerLoadState.neighborhoods = 'loading';
+    updateLayerStatus('Cargando capa de barrios…');
+
+    try {
+        const geojson = await fetchOfficialGeoJson(3, 'gid,id_barrio,barrio,comuna');
+        officialNeighborhoodLayer.clearLayers();
+        L.geoJSON(geojson, {
+            style: {
+                color: '#2563a9',
+                weight: 1.1,
+                opacity: 0.9,
+                fillColor: '#2563a9',
+                fillOpacity: 0.018
+            },
+            onEachFeature(feature, layer) {
+                const properties = feature.properties || {};
+                const commune = properties.comuna ? ` · Comuna ${properties.comuna}` : '';
+                layer.bindTooltip(`${properties.barrio || 'Barrio'}${commune}`, {
+                    sticky: true,
+                    className: 'official-layer-tooltip'
+                });
+            }
+        }).addTo(officialNeighborhoodLayer);
+        layerLoadState.neighborhoods = 'official';
+        updateLayerStatus('Capa oficial de barrios cargada.');
+    } catch (error) {
+        console.warn('No fue posible descargar barrios oficiales; se usa respaldo Cadaya.', error);
+        await buildNeighborhoodFallback();
+    }
+}
+
+async function ensureCommuneLayer() {
+    if (layerLoadState.communes !== 'idle') return;
+    layerLoadState.communes = 'loading';
+    updateLayerStatus('Cargando capa de comunas…');
+
+    try {
+        const geojson = await fetchOfficialGeoJson(2, 'gid,comuna,nombre');
+        officialCommuneLayer.clearLayers();
+        L.geoJSON(geojson, {
+            style: {
+                color: '#c8102e',
+                weight: 2.1,
+                opacity: 0.9,
+                fillColor: '#c8102e',
+                fillOpacity: 0.025
+            },
+            onEachFeature(feature, layer) {
+                const properties = feature.properties || {};
+                const label = properties.comuna || properties.nombre || '';
+                layer.bindTooltip(`Comuna ${label}`.trim(), {
+                    sticky: true,
+                    className: 'official-layer-tooltip'
+                });
+            }
+        }).addTo(officialCommuneLayer);
+        layerLoadState.communes = 'official';
+        updateLayerStatus('Capa oficial de comunas cargada.');
+    } catch (error) {
+        console.warn('No fue posible descargar comunas oficiales; se usa respaldo Cadaya.', error);
+        await buildCommuneFallback();
+    }
+}
+
+map.on('overlayadd', event => {
+    if (event.layer === officialNeighborhoodLayer) ensureNeighborhoodLayer();
+    if (event.layer === officialCommuneLayer) ensureCommuneLayer();
+});
 
 function refreshMacroZoneLayer(clients = []) {
     commercialMacroZoneLayer.clearLayers();
@@ -167,33 +274,29 @@ function refreshMacroZoneLayer(clients = []) {
 
     Object.entries(grouped).forEach(([name, items]) => {
         const color = macroZoneColors[name] || '#68707d';
-        const hull = convexHull(items.map(client => [client.lon, client.lat]));
-
-        let shape;
-        if (hull.length >= 3) {
-            shape = L.polygon(hull.map(([lon, lat]) => [lat, lon]), {
-                color,
-                weight: 2,
-                opacity: 0.85,
-                fillColor: color,
-                fillOpacity: 0.075,
-                interactive: true
-            });
-        } else {
-            shape = L.circle([items[0].lat, items[0].lon], {
-                radius: 750,
-                color,
-                weight: 2,
-                fillColor: color,
-                fillOpacity: 0.075
-            });
-        }
-
-        shape.bindTooltip(
-            `<strong>${escapeHtml(name)}</strong><br>${items.length.toLocaleString('es-CO')} punto(s)`,
-            { sticky: true, className: 'macrozone-tooltip' }
-        );
+        const shape = createCoverageShape(items, {
+            color,
+            weight: 2,
+            fillOpacity: 0.09,
+            radius: 900
+        });
+        shape.bindTooltip(`<strong>${escapeHtml(name)}</strong><br>${items.length.toLocaleString('es-CO')} punto(s)`, {
+            sticky: true,
+            className: 'macrozone-tooltip'
+        });
         shape.addTo(commercialMacroZoneLayer);
+
+        const centerLat = items.reduce((sum, item) => sum + item.lat, 0) / items.length;
+        const centerLon = items.reduce((sum, item) => sum + item.lon, 0) / items.length;
+        L.marker([centerLat, centerLon], {
+            interactive: false,
+            icon: L.divIcon({
+                className: 'macrozone-label-wrapper',
+                html: `<span class="macrozone-label" style="--macro-color:${color}">${escapeHtml(name)}</span>`,
+                iconSize: [130, 28],
+                iconAnchor: [65, 14]
+            })
+        }).addTo(commercialMacroZoneLayer);
     });
 }
 
@@ -202,5 +305,7 @@ window.CADAYA_MAP_LAYERS = {
     neighborhoods: officialNeighborhoodLayer,
     communes: officialCommuneLayer,
     macroZones: commercialMacroZoneLayer,
-    control: mapLayerControl
+    control: mapLayerControl,
+    loadNeighborhoods: ensureNeighborhoodLayer,
+    loadCommunes: ensureCommuneLayer
 };
