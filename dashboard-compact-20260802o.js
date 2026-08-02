@@ -126,7 +126,6 @@
         if (window.innerWidth <= 920) closeSidebar();
     };
 
-    // Asegura que los botones ya renderizados adopten el nuevo comportamiento visual.
     const refreshWhenReady = () => {
         if (!state.dataReady) {
             setTimeout(refreshWhenReady, 120);
@@ -141,7 +140,6 @@
     if (document.getElementById('cadayaExcelAdminLoader')) return;
     const script = document.createElement('script');
     script.id = 'cadayaExcelAdminLoader';
-    script.src = 'admin-excel-loader-20260802p.js?v=20260802p';
-    script.defer = true;
+    script.src = 'admin-excel-loader-20260802q.js?v=20260802q';
     document.body.appendChild(script);
 })();
