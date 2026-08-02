@@ -14,6 +14,16 @@ if not exist "Mapa-Comercial.csv" (
   exit /b 1
 )
 
+echo Sincronizando la carpeta con GitHub...
+git pull --rebase --autostash origin main
+if errorlevel 1 (
+  echo.
+  echo ERROR: No fue posible sincronizar el repositorio.
+  echo Revisa la conexion, el acceso a GitHub o los cambios pendientes.
+  pause
+  exit /b 1
+)
+
 git add Mapa-Comercial.csv
 
 git diff --cached --quiet
