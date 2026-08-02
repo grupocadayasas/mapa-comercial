@@ -1,497 +1,142 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#b90016">
+    <title>Mapa Comercial | Grupo Cadaya</title>
 
-<title>GRUPO CADAYA - Mapa Comercial</title>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
-
-<style>
-*{box-sizing:border-box}
-
-html,body{
-    margin:0;
-    padding:0;
-    height:100%;
-    font-family:Arial, Helvetica, sans-serif;
-    background:#f4f6f8;
-}
-
-/* LOGIN CORPORATIVO */
-#login{
-    position:fixed;
-    inset:0;
-    background:
-        radial-gradient(circle at 85% 40%, #111 0%, #111 22%, transparent 23%),
-        radial-gradient(circle at 15% 100%, #d90000 0%, #d90000 28%, transparent 29%),
-        linear-gradient(135deg, #ffffff 0%, #ffffff 55%, #111 56%, #111 100%);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    z-index:99999;
-    overflow:hidden;
-}
-
-#login::before{
-    content:"";
-    position:absolute;
-    width:700px;
-    height:220px;
-    background:#e00000;
-    bottom:-80px;
-    left:-120px;
-    border-radius:50%;
-    transform:rotate(-8deg);
-}
-
-#login::after{
-    content:"";
-    position:absolute;
-    width:600px;
-    height:180px;
-    background:#e00000;
-    top:40px;
-    right:-180px;
-    border-radius:50%;
-    transform:rotate(-35deg);
-}
-
-.login-card{
-    position:relative;
-    z-index:2;
-    width:90%;
-    max-width:720px;
-    background:rgba(255,255,255,.96);
-    padding:35px 45px;
-    border-radius:18px;
-    box-shadow:0 18px 45px rgba(0,0,0,.35);
-    text-align:center;
-}
-
-.logo-login-img{
-    width:100%;
-    max-width:560px;
-    margin-bottom:25px;
-}
-
-.linea-login{
-    height:1px;
-    background:#ddd;
-    margin:15px 0 25px 0;
-}
-
-.titulo-login{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:18px;
-    margin-bottom:28px;
-    font-size:28px;
-    font-weight:800;
-    letter-spacing:8px;
-    color:#111;
-}
-
-.titulo-login span{color:#d90000;}
-
-.titulo-login::before,
-.titulo-login::after{
-    content:"";
-    width:80px;
-    height:2px;
-    background:#d90000;
-}
-
-.login-input{
-    width:100%;
-    padding:16px 18px;
-    margin-bottom:15px;
-    border:1px solid #cfcfcf;
-    border-radius:8px;
-    font-size:18px;
-    background:white;
-}
-
-.login-input:focus{
-    outline:none;
-    border-color:#d90000;
-    box-shadow:0 0 0 2px rgba(217,0,0,.15);
-}
-
-.login-card button{
-    width:100%;
-    padding:16px;
-    margin-top:8px;
-    background:linear-gradient(90deg,#c90000,#ed0000);
-    color:white;
-    border:none;
-    border-radius:8px;
-    font-size:22px;
-    font-weight:800;
-    cursor:pointer;
-}
-
-.acceso-restringido{
-    margin-top:22px;
-    color:#777;
-    letter-spacing:4px;
-    font-size:14px;
-}
-
-#errorLogin{
-    color:#d32f2f;
-    margin-top:12px;
-    display:none;
-    font-size:14px;
-}
-
-/* APP */
-#app{
-    display:none;
-    width:100%;
-    height:100vh;
-}
-
-#contenedor{
-    display:flex;
-    width:100%;
-    height:100%;
-}
-
-#panel{
-    width:380px;   
-    min-width:380px;
-    max-width:380px;
-    height:100vh;
-    background:#ffffff;
-    border-right:1px solid #dcdcdc;
-    overflow-y:auto;
-    box-shadow:3px 0 12px rgba(0,0,0,.12);
-    z-index:9999;
-}
-
-.encabezado{
-    padding:24px 24px 18px 24px;
-    border-bottom:1px solid #e6e6e6;
-}
-
-.logo-panel-img{
-    width:100%;
-    max-width:310px;
-}
-
-#textoUsuario{
-    margin-top:12px;
-    font-size:13px;
-    color:#555;
-    line-height:1.4;
-}
-
-#textoUsuario strong{color:#d90000;}
-
-.contenido-panel{padding:20px 22px;}
-
-.seccion{margin-bottom:24px;}
-
-.titulo-seccion{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    font-size:15px;
-    font-weight:bold;
-    color:#d90000;
-    text-transform:uppercase;
-    margin-bottom:12px;
-}
-
-.filtro{
-    width:100%;
-    padding:12px 14px;
-    border:1px solid #d5dce3;
-    border-radius:8px;
-    margin-bottom:12px;
-    font-size:14px;
-    background:#fff;
-    color:#333;
-}
-
-.filtro:focus{
-    outline:none;
-    border-color:#d90000;
-    box-shadow:0 0 0 2px rgba(217,0,0,.12);
-}
-
-.card{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:10px;
-    padding:13px 14px;
-    background:#ffffff;
-    border:1px solid #e5e8ec;
-    border-radius:10px;
-    box-shadow:0 2px 8px rgba(0,0,0,.05);
-}
-
-.card-label{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    color:#333;
-    font-size:14px;
-}
-
-.icono-card{
-    width:30px;
-    height:30px;
-    border-radius:50%;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    color:white;
-    font-size:15px;
-    font-weight:bold;
-}
-
-.rojo{background:#d90000;}
-.negro{background:#111;}
-.gris{background:#555;}
-
-.card-numero{
-    font-size:22px;
-    font-weight:bold;
-    color:#d90000;
-}
-
-.item-lista{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:7px 0;
-    font-size:14px;
-    border-bottom:1px solid #f0f0f0;
-}
-
-.item-lista:last-child{border-bottom:none;}
-
-.item-nombre{
-    display:flex;
-    align-items:center;
-    gap:8px;
-}
-
-.color-vendedor,
-.color-zona{
-    width:12px;
-    height:12px;
-    border-radius:50%;
-    display:inline-block;
-}
-
-#estadisticasZona,
-#estadisticasVendedores{
-    max-height:260px;
-    overflow:auto;
-}
-
-#map{
-    flex:1;
-    height:100vh;
-}
-
-#btnMenu{
-    display:none;
-    position:fixed;
-    top:15px;
-    right:15px;
-    z-index:10000;
-    background:#d90000;
-    color:white;
-    border:none;
-    padding:11px 15px;
-    border-radius:8px;
-    font-size:22px;
-    cursor:pointer;
-    box-shadow:0 4px 12px rgba(0,0,0,.3);
-}
-
-#cerrarPanel{
-    display:none;
-    background:#111;
-    color:white;
-    border:none;
-    border-radius:8px;
-    padding:10px;
-    width:100%;
-    margin-bottom:15px;
-    cursor:pointer;
-    font-weight:bold;
-}
-
-.leaflet-popup-content{min-width:260px;}
-
-::-webkit-scrollbar{width:8px}
-::-webkit-scrollbar-thumb{background:#b7b7b7;border-radius:4px}
-::-webkit-scrollbar-track{background:#f1f1f1}
-
-@media (max-width:768px){
-    #contenedor{display:block}
-
-    #panel{
-        position:fixed;
-        top:0;
-        left:-390px;
-        height:100vh;
-        transition:left .3s ease;
-    }
-
-    #panel.activo{left:0}
-
-    #map{
-        width:100%;
-        height:100vh;
-    }
-
-    #btnMenu{display:block}
-    #cerrarPanel{display:block}
-
-    .login-card{padding:25px;}
-
-    .titulo-login{
-        font-size:20px;
-        letter-spacing:4px;
-    }
-
-    .titulo-login::before,
-    .titulo-login::after{width:35px;}
-}
-
-@media (max-width:420px){
-    #panel{
-        width:340px;
-        min-width:340px;
-        max-width:340px;
-        left:-350px;
-    }
-}
-</style>
+    <link rel="stylesheet" href="styles.css?v=20260802">
 </head>
-
 <body>
+    <section id="loginScreen" class="login-screen" aria-label="Inicio de sesión">
+        <div class="login-card">
+            <img src="logo_cadaya.png" class="login-logo" alt="Grupo Cadaya">
+            <p class="login-kicker">Herramienta corporativa</p>
+            <h1 class="login-title">Mapa Comercial</h1>
+            <p class="login-subtitle">Consulta la ubicación y la información comercial de los clientes asignados.</p>
 
-<div id="login">
-    <div class="login-card">
+            <form id="loginForm" autocomplete="on">
+                <label class="field-label" for="usuario">Usuario</label>
+                <div class="field-wrap">
+                    <input class="field" id="usuario" name="usuario" type="text" autocomplete="username" required>
+                </div>
 
-        <img src="logo_cadaya.png" class="logo-login-img" alt="GRUPO CADAYA">
+                <label class="field-label" for="clave">Contraseña</label>
+                <div class="field-wrap">
+                    <input class="field password-field" id="clave" name="clave" type="password" autocomplete="current-password" required>
+                    <button class="show-password" id="showPassword" type="button">Mostrar</button>
+                </div>
 
-        <div class="linea-login"></div>
-
-        <div class="titulo-login">
-            MAPA <span>COMERCIAL</span>
+                <button class="login-button" id="loginButton" type="submit" disabled>Cargando datos…</button>
+                <p id="loginMessage" class="login-message" aria-live="polite">Preparando el mapa comercial.</p>
+            </form>
+            <div class="login-foot">Acceso restringido · Grupo Cadaya SAS</div>
         </div>
+    </section>
 
-        <input class="login-input" type="text" id="usuario" placeholder="Usuario">
-        <input class="login-input" type="password" id="clave" placeholder="Contraseña">
+    <main id="app" class="app-shell hidden">
+        <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
 
-        <button onclick="iniciarSesion()">INGRESAR</button>
+        <aside id="sidebar" class="sidebar" aria-label="Panel de control">
+            <header class="sidebar-head">
+                <div class="brand-row">
+                    <img src="logo_cadaya.png" class="sidebar-logo" alt="Grupo Cadaya">
+                    <button id="closeSidebar" class="icon-button" type="button" aria-label="Cerrar panel">×</button>
+                </div>
+                <div class="user-card">
+                    <div id="userInitials" class="avatar">GC</div>
+                    <div class="user-meta">
+                        <p id="userName" class="user-name">Usuario</p>
+                        <p id="userRole" class="user-role">Perfil</p>
+                    </div>
+                </div>
+            </header>
 
-        <div class="acceso-restringido">ACCESO RESTRINGIDO</div>
+            <div class="sidebar-scroll">
+                <section class="section">
+                    <div class="section-title">
+                        <span>Buscar y filtrar</span>
+                        <span id="filterResultCount" class="result-count">0 visibles</span>
+                    </div>
 
-        <div id="errorLogin">Usuario o contraseña incorrectos</div>
-    </div>
-</div>
+                    <div class="search-box">
+                        <span class="search-icon">⌕</span>
+                        <input id="buscarCliente" class="field" type="search" placeholder="Cliente, NIT, barrio o dirección…" autocomplete="off">
+                    </div>
 
-<div id="app">
+                    <div class="filter-grid">
+                        <select id="filtroVendedor" class="field" aria-label="Filtrar por vendedor">
+                            <option value="">Todos los vendedores</option>
+                        </select>
+                        <select id="filtroZona" class="field" aria-label="Filtrar por zona">
+                            <option value="">Todas las zonas</option>
+                        </select>
+                        <select id="filtroTipo" class="field" aria-label="Filtrar por tipo de establecimiento">
+                            <option value="">Todos los tipos</option>
+                        </select>
+                    </div>
 
-    <button id="btnMenu" onclick="abrirPanel()">☰</button>
+                    <div class="filter-actions">
+                        <button id="resetFilters" class="secondary-button" type="button">Limpiar filtros</button>
+                        <button id="fitVisible" class="primary-button" type="button">Ver resultados</button>
+                    </div>
+                </section>
 
-    <div id="contenedor">
+                <section class="section">
+                    <h2 class="section-title">Indicadores</h2>
+                    <div class="kpi-grid">
+                        <div class="kpi accent"><span id="totalClientes" class="kpi-value">0</span><span class="kpi-label">Clientes únicos</span></div>
+                        <div class="kpi"><span id="clientesVisibles" class="kpi-value">0</span><span class="kpi-label">Puntos visibles</span></div>
+                        <div class="kpi"><span id="totalBarrios" class="kpi-value">0</span><span class="kpi-label">Barrios visibles</span></div>
+                        <div class="kpi"><span id="totalComunas" class="kpi-value">0</span><span class="kpi-label">Comunas visibles</span></div>
+                    </div>
+                </section>
 
-        <div id="panel">
+                <section class="section">
+                    <h2 class="section-title">Por tipo de establecimiento</h2>
+                    <div id="estadisticasTipo" class="stat-list"></div>
+                </section>
 
-            <div class="encabezado">
-                <button id="cerrarPanel" onclick="cerrarPanel()">Cerrar panel</button>
-                <img src="logo_cadaya.png" class="logo-panel-img" alt="GRUPO CADAYA">
-                <div id="textoUsuario"></div>
+                <section class="section">
+                    <h2 class="section-title">Por zona</h2>
+                    <div id="estadisticasZona" class="stat-list"></div>
+                </section>
+
+                <section id="seccionVendedores" class="section">
+                    <h2 class="section-title">Por vendedor</h2>
+                    <div id="estadisticasVendedores" class="stat-list"></div>
+                </section>
+
+                <button id="logoutButton" class="secondary-button" type="button" style="width:100%;">Cerrar sesión</button>
+            </div>
+        </aside>
+
+        <section class="map-wrap" aria-label="Mapa de clientes">
+            <button id="openSidebar" class="menu-button" type="button">☰ <span>Panel</span></button>
+            <div id="map"></div>
+
+            <div class="map-toolbar">
+                <button id="locateMe" class="map-button" type="button" title="Mi ubicación">◎ <span>Mi ubicación</span></button>
+                <button id="fitAll" class="map-button" type="button" title="Ver todos">⌂ <span>Vista general</span></button>
             </div>
 
-            <div class="contenido-panel">
+            <div id="mapStatus" class="map-status"><span class="status-dot"></span><span>Preparando información…</span></div>
+            <div id="mapLoading" class="map-loading"><div class="loader-card">Cargando clientes y ubicaciones…</div></div>
+        </section>
+    </main>
 
-                <div class="seccion">
-                    <div class="titulo-seccion">🔎 Filtros</div>
-
-                    <input type="text" id="buscarCliente" list="listaClientes" placeholder="Buscar cliente..." class="filtro">
-                    <datalist id="listaClientes"></datalist>
-
-                    <select id="filtroVendedor" class="filtro">
-                        <option value="">Todos los vendedores</option>
-                    </select>
-
-                    <select id="filtroZona" class="filtro">
-                        <option value="">Todas las zonas</option>
-                        <option value="Norte">Norte</option>
-                        <option value="Centro">Centro</option>
-                        <option value="Oriente">Oriente</option>
-                        <option value="Sur">Sur</option>
-                        <option value="Ladera/Oeste">Ladera/Oeste</option>
-                    </select>
-                </div>
-
-                <div class="seccion">
-                    <div class="titulo-seccion">📊 Indicadores</div>
-
-                    <div class="card">
-                        <div class="card-label"><div class="icono-card rojo">C</div>Clientes Totales</div>
-                        <div class="card-numero" id="totalClientes">0</div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-label"><div class="icono-card negro">V</div>Clientes Visibles</div>
-                        <div class="card-numero" id="clientesVisibles">0</div>
-                    </div>
-
-                    <div class="card" id="cardTotalVendedores">
-                        <div class="card-label"><div class="icono-card rojo">P</div>Vendedores</div>
-                        <div class="card-numero" id="totalVendedores">0</div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-label"><div class="icono-card negro">B</div>Barrios</div>
-                        <div class="card-numero" id="totalBarrios">0</div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-label"><div class="icono-card gris">Z</div>Comunas</div>
-                        <div class="card-numero" id="totalComunas">0</div>
-                    </div>
-                </div>
-
-                <div class="seccion">
-                    <div class="titulo-seccion">📍 Clientes por Zona</div>
-                    <div id="estadisticasZona"></div>
-                </div>
-
-                <div class="seccion" id="seccionVendedores">
-                    <div class="titulo-seccion">👤 Clientes por Vendedor</div>
-                    <div id="estadisticasVendedores"></div>
-                </div>
-
-            </div>
-        </div>
-
-        <div id="map"></div>
-
-    </div>
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="app.js"></script>
-
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="app.js?v=20260802"></script>
+    <script src="app.ui.js?v=20260802"></script>
 </body>
 </html>
