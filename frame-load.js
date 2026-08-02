@@ -1,40 +1,5 @@
 'use strict';
 
-function readCadayaTextFrame(path, timeoutMs = 15000) {
-    return new Promise((resolve, reject) => {
-        const frame = document.createElement('iframe');
-        let finished = false;
-        const timer = window.setTimeout(() => finish(new Error(`${path}: tiempo de espera agotado`)), timeoutMs);
-
-        function cleanup() {
-            window.clearTimeout(timer);
-            frame.remove();
-        }
-
-        function finish(error, value) {
-            if (finished) return;
-            finished = true;
-            cleanup();
-            if (error) reject(error); else resolve(value);
-        }
-
-        frame.hidden = true;
-        frame.setAttribute('aria-hidden', 'true');
-        frame.onload = () => {
-            try {
-                const text = frame.contentDocument?.body?.innerText || frame.contentDocument?.documentElement?.textContent || '';
-                if (!text.trim()) throw new Error(`${path}: contenido vacío`);
-                finish(null, text.trim());
-            } catch (error) {
-                finish(error);
-            }
-        };
-        frame.onerror = () => finish(new Error(`${path}: no fue posible abrir el archivo`));
-        frame.src = path;
-        document.body.appendChild(frame);
-    });
-}
-
 function initializeCadayaClients(rows) {
     const usableRows = rows.filter(row => cleanValue(row.Vendedor) && cleanValue(row.Vendedor) !== 'Vendedor');
     state.dataWarnings = [];
@@ -66,31 +31,24 @@ function initializeCadayaClients(rows) {
     restoreSession();
 }
 
-loadData = async function loadCadayaWithoutFetch() {
+loadData = async function loadCadayaEmbeddedData() {
     dom.loginButton.disabled = true;
     dom.loginButton.textContent = 'Cargando datos…';
     dom.loginButton.onclick = null;
     dom.loginMessage.classList.remove('error');
-    dom.loginMessage.textContent = 'Cargando la base comercial…';
+    dom.loginMessage.textContent = 'Cargando la base comercial integrada…';
 
     try {
-        let encoded = '';
-
-        if (Array.isArray(window.CADAYA_B64_PARTS) && window.CADAYA_B64_PARTS.length === 4) {
-            encoded = window.CADAYA_B64_PARTS.join('');
-        } else {
-            const [part1, part2] = await Promise.all([
-                readCadayaTextFrame('clientes_cali.1.b64'),
-                readCadayaTextFrame('clientes_cali.2.b64')
-            ]);
-            encoded = part1 + part2;
-        }
+        const encoded = String(window.CADAYA_BASE64_DATA || '').trim();
+        if (!encoded) throw new Error('No se encontró la base comercial integrada.');
 
         const csvText = await gunzipCadayaBase64(encoded);
         const rows = parseCadayaCsv(csvText);
+        if (!rows.length) throw new Error('La base comercial integrada está vacía.');
+
         initializeCadayaClients(rows);
     } catch (error) {
-        console.error('Carga comercial sin fetch:', error);
+        console.error('Carga comercial integrada:', error);
         state.dataReady = false;
         dom.loginMessage.classList.add('error');
         dom.loginMessage.textContent = `No fue posible iniciar la base comercial. ${error?.message || ''}`;
