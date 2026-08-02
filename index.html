@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#b90016">
+    <link rel="canonical" href="https://grupocadayasas.github.io/mapa-comercial/">
     <title>Mapa Comercial | Grupo Cadaya</title>
+    <script>
+        if (window.location.search) window.history.replaceState(null, '', window.location.pathname);
+    </script>
 
     <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://ws-idesc.cali.gov.co">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="styles.css?v=20260802j">
+    <link rel="stylesheet" href="styles.css?v=20260802k">
+    <link rel="stylesheet" href="styles-v2-20260802k.css?v=1">
 </head>
 <body>
     <section id="loginScreen" class="login-screen" aria-label="Inicio de sesión">
@@ -66,12 +72,15 @@
 
                     <div class="search-box">
                         <span class="search-icon">⌕</span>
-                        <input id="buscarCliente" class="field" type="search" placeholder="Cliente, NIT, barrio, zona o dirección…" autocomplete="off">
+                        <input id="buscarCliente" class="field" type="search" placeholder="Cliente, NIT, barrio, comuna, zona…" autocomplete="off">
                     </div>
 
                     <div class="filter-grid">
                         <select id="filtroVendedor" class="field" aria-label="Filtrar por vendedor">
                             <option value="">Todos los vendedores</option>
+                        </select>
+                        <select id="filtroMacrozona" class="field" aria-label="Filtrar por macrozona">
+                            <option value="">Todas las macrozonas</option>
                         </select>
                         <select id="filtroZona" class="field" aria-label="Filtrar por zona">
                             <option value="">Todas las zonas</option>
@@ -87,19 +96,22 @@
                     </div>
                 </section>
 
-                <section class="section">
-                    <h2 class="section-title">Indicadores</h2>
-                    <div class="kpi-grid">
+                <section class="section dashboard-section">
+                    <h2 class="section-title">Dashboard comercial</h2>
+                    <p class="dashboard-note">Los indicadores se actualizan con los filtros activos.</p>
+                    <div class="kpi-grid kpi-grid-extended">
                         <div class="kpi accent"><span id="totalClientes" class="kpi-value">0</span><span class="kpi-label">Clientes únicos</span></div>
                         <div class="kpi"><span id="clientesVisibles" class="kpi-value">0</span><span class="kpi-label">Puntos visibles</span></div>
-                        <div class="kpi"><span id="totalBarrios" class="kpi-value">0</span><span class="kpi-label">Barrios visibles</span></div>
-                        <div class="kpi"><span id="totalComunas" class="kpi-value">0</span><span class="kpi-label">Comunas visibles</span></div>
+                        <div class="kpi"><span id="totalBarrios" class="kpi-value">0</span><span class="kpi-label">Barrios</span></div>
+                        <div class="kpi"><span id="totalComunas" class="kpi-value">0</span><span class="kpi-label">Comunas</span></div>
+                        <div class="kpi"><span id="totalZonas" class="kpi-value">0</span><span class="kpi-label">Zonas / subzonas</span></div>
+                        <div class="kpi"><span id="totalMacrozonas" class="kpi-value">0</span><span class="kpi-label">Macrozonas</span></div>
                     </div>
                 </section>
 
                 <section class="section">
-                    <h2 class="section-title">Por tipo de establecimiento</h2>
-                    <div id="estadisticasTipo" class="stat-list"></div>
+                    <h2 class="section-title">Por macrozona</h2>
+                    <div id="estadisticasMacrozona" class="stat-list"></div>
                 </section>
 
                 <section class="section">
@@ -107,9 +119,23 @@
                     <div id="estadisticasZona" class="stat-list"></div>
                 </section>
 
+                <section class="section">
+                    <h2 class="section-title">Por comuna</h2>
+                    <div id="estadisticasComuna" class="stat-list"></div>
+                </section>
+
+                <section class="section">
+                    <h2 class="section-title">Por tipo de establecimiento</h2>
+                    <div id="estadisticasTipo" class="stat-list"></div>
+                </section>
+
                 <section id="seccionVendedores" class="section">
                     <h2 class="section-title">Por vendedor</h2>
                     <div id="estadisticasVendedores" class="stat-list"></div>
+                </section>
+
+                <section class="section">
+                    <p class="dashboard-note">Capas: barrios y comunas oficiales de IDESC; macrozonas comerciales calculadas con los puntos de Cadaya.</p>
                 </section>
 
                 <button id="logoutButton" class="secondary-button" type="button" style="width:100%;">Cerrar sesión</button>
@@ -119,6 +145,12 @@
         <section class="map-wrap" aria-label="Mapa de clientes">
             <button id="openSidebar" class="menu-button" type="button">☰ <span>Panel</span></button>
             <div id="map"></div>
+
+            <div id="mapDashboard" class="map-dashboard" aria-label="Resumen del mapa">
+                <div class="map-dashboard-item"><span id="mapDashVisible" class="map-dashboard-value">0</span><span class="map-dashboard-label">Puntos</span></div>
+                <div class="map-dashboard-item"><span id="mapDashZones" class="map-dashboard-value">0</span><span class="map-dashboard-label">Zonas</span></div>
+                <div class="map-dashboard-item"><span id="mapDashMacro" class="map-dashboard-value">0</span><span class="map-dashboard-label">Macrozonas</span></div>
+            </div>
 
             <div class="map-toolbar">
                 <button id="locateMe" class="map-button" type="button" title="Mi ubicación">◎ <span>Mi ubicación</span></button>
@@ -134,13 +166,15 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <script src="app.js?v=20260802j"></script>
-    <script src="zone-runtime.js?v=20260802j"></script>
+    <script src="app.js?v=20260802k"></script>
+    <script src="zone-runtime.js?v=20260802k"></script>
+    <script src="dom-extensions-20260802k.js"></script>
+    <script src="map-layers-20260802k.js"></script>
     <script src="cadaya-data-20260802-1516-1.js"></script>
     <script src="cadaya-data-20260802-1516-2.js"></script>
     <script src="cadaya-data-20260802-1516-3.js"></script>
     <script src="cadaya-data-20260802-1516-4.js"></script>
     <script src="embedded-loader-20260802-1516.js"></script>
-    <script src="app.ui.js?v=20260802j"></script>
+    <script src="app-ui-v2-20260802k.js"></script>
 </body>
 </html>
