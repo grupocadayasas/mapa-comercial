@@ -11,12 +11,12 @@
     </script>
 
     <link rel="preconnect" href="https://unpkg.com">
-    <link rel="preconnect" href="https://ws-idesc.cali.gov.co">
+    <link rel="preconnect" href="https://geoportal.cali.gov.co">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="styles.css?v=20260802k">
-    <link rel="stylesheet" href="styles-v2-20260802k.css?v=1">
+    <link rel="stylesheet" href="styles.css?v=20260802m">
+    <link rel="stylesheet" href="styles-v2-20260802k.css?v=20260802m">
 </head>
 <body>
     <section id="loginScreen" class="login-screen" aria-label="Inicio de sesión">
@@ -90,6 +90,8 @@
                         </select>
                     </div>
 
+                    <p class="dashboard-note">Los filtros actualizan los puntos sin mover el mapa. Usa <strong>Ver resultados</strong> para centrar la selección.</p>
+
                     <div class="filter-actions">
                         <button id="resetFilters" class="secondary-button" type="button">Limpiar filtros</button>
                         <button id="fitVisible" class="primary-button" type="button">Ver resultados</button>
@@ -100,7 +102,7 @@
                     <h2 class="section-title">Dashboard comercial</h2>
                     <p class="dashboard-note">Los indicadores se actualizan con los filtros activos.</p>
                     <div class="kpi-grid kpi-grid-extended">
-                        <div class="kpi accent"><span id="totalClientes" class="kpi-value">0</span><span class="kpi-label">Clientes únicos</span></div>
+                        <div class="kpi accent"><span id="totalClientes" class="kpi-value">0</span><span class="kpi-label">Clientes únicos visibles</span></div>
                         <div class="kpi"><span id="clientesVisibles" class="kpi-value">0</span><span class="kpi-label">Puntos visibles</span></div>
                         <div class="kpi"><span id="totalBarrios" class="kpi-value">0</span><span class="kpi-label">Barrios</span></div>
                         <div class="kpi"><span id="totalComunas" class="kpi-value">0</span><span class="kpi-label">Comunas</span></div>
@@ -135,7 +137,7 @@
                 </section>
 
                 <section class="section">
-                    <p class="dashboard-note">Capas: barrios y comunas oficiales de IDESC; macrozonas comerciales calculadas con los puntos de Cadaya.</p>
+                    <p class="dashboard-note">Capas: barrios y comunas oficiales del Geoportal IDESC; macrozonas comerciales calculadas con los puntos de Cadaya.</p>
                 </section>
 
                 <button id="logoutButton" class="secondary-button" type="button" style="width:100%;">Cerrar sesión</button>
@@ -166,15 +168,15 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <script src="app.js?v=20260802k"></script>
-    <script src="zone-runtime.js?v=20260802k"></script>
-    <script src="dom-extensions-20260802k.js"></script>
-    <script src="map-layers-20260802k.js"></script>
+    <script src="app.js?v=20260802m"></script>
+    <script src="zone-runtime.js?v=20260802m"></script>
+    <script src="dom-extensions-20260802k.js?v=20260802m"></script>
+    <script src="map-layers-20260802k.js?v=20260802m"></script>
     <script src="cadaya-data-20260802-1516-1.js"></script>
     <script src="cadaya-data-20260802-1516-2.js"></script>
     <script src="cadaya-data-20260802-1516-3.js"></script>
     <script src="cadaya-data-20260802-1516-4.js"></script>
-    <script src="embedded-loader-20260802-1516.js"></script>
-    <script src="app-ui-v2-20260802k.js"></script>
+    <script src="embedded-loader-20260802-1516.js?v=20260802m"></script>
+    <script src="app-ui-v2-20260802k.js?v=20260802m"></script>
 </body>
 </html>
