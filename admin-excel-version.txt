@@ -1,0 +1,9 @@
+Administrador Excel Cadaya
+Versión: 20260802p
+Funciones:
+- Descargar Excel actual
+- Cargar y validar XLS/XLSX
+- Validar encabezados, obligatorios, coordenadas, duplicados NIT+sucursal, vendedores y zona/macrozona
+- Comparar nuevos, modificados, sin cambios y ausentes
+- Descargar Excel validado
+- Aplicar temporalmente en la sesión del administrador
