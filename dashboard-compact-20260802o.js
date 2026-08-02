@@ -136,3 +136,12 @@
     };
     refreshWhenReady();
 })();
+
+(function loadExcelAdminModule() {
+    if (document.getElementById('cadayaExcelAdminLoader')) return;
+    const script = document.createElement('script');
+    script.id = 'cadayaExcelAdminLoader';
+    script.src = 'admin-excel-loader-20260802p.js?v=20260802p';
+    script.defer = true;
+    document.body.appendChild(script);
+})();
