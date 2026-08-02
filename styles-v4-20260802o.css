@@ -14,9 +14,9 @@
 .dashboard-compact-layout .kpi-value{font-size:22px}
 .dashboard-compact-layout .section-title{margin-bottom:9px}
 .dashboard-compact-layout .stat-list{gap:4px}
-.dashboard-compact-layout .stat-row{min-height:34px;padding:7px 8px}
+.dashboard-compact-layout .stat-row{min-height:34px;padding:7px 25px 7px 8px}
 .dashboard-compact-layout .stat-row.active{color:var(--brand-dark);background:rgba(200,16,46,.11);box-shadow:inset 0 0 0 1px rgba(200,16,46,.18)}
-.dashboard-compact-layout .stat-row.active::after{content:'✓';position:relative;z-index:2;margin-left:3px;color:var(--brand);font-size:12px;font-weight:900}
+.dashboard-compact-layout .stat-row.active::after{content:'✓';position:absolute;z-index:2;right:8px;top:50%;color:var(--brand);font-size:12px;font-weight:900;transform:translateY(-50%)}
 .dashboard-compact-layout .stat-row[aria-pressed="true"] .stat-number{color:var(--brand)}
 .dashboard-compact-layout .dashboard-filter-help{margin:0;color:#727b88;font-size:11px;line-height:1.45}
 .commune-collapsible{overflow:hidden;border:1px solid var(--line);border-radius:13px;background:#fff}
