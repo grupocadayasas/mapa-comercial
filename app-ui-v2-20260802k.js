@@ -1,21 +1,45 @@
 'use strict';
 
+state.dashboardCommuneFilter = '';
+map.options.zoomSnap = 0.5;
+map.options.zoomDelta = 0.5;
+
+markers.options.zoomToBoundsOnClick = true;
+markers.options.spiderfyOnMaxZoom = true;
+markers.options.disableClusteringAtZoom = 17;
+markers.options.removeOutsideVisibleBounds = true;
+
 function clearDynamicOptions(select) {
     while (select && select.options.length > 1) select.remove(1);
+}
+
+function uniqueSorted(values, formatter = value => value) {
+    return [...new Set(values.filter(Boolean))]
+        .sort((a, b) => formatter(a).localeCompare(formatter(b), 'es'));
 }
 
 function populateFilters() {
     [dom.sellerFilter, dom.macroFilter, dom.zoneFilter, dom.typeFilter].forEach(clearDynamicOptions);
 
-    const sellers = [...new Set(state.clients.map(client => client.seller))].sort((a, b) => a.localeCompare(b, 'es'));
-    const macroZones = [...new Set(state.clients.map(client => client.macroZone || 'Sin macrozona'))].sort((a, b) => a.localeCompare(b, 'es'));
-    const zones = [...new Set(state.clients.map(client => client.zone))].sort((a, b) => a.localeCompare(b, 'es'));
-    const types = [...new Set(state.clients.map(client => client.type))].sort((a, b) => a.localeCompare(b, 'es'));
+    const sellers = uniqueSorted(state.clients.map(client => client.seller), formatSellerName);
+    const macroZones = uniqueSorted(state.clients.map(client => client.macroZone || 'Sin macrozona'));
+    const zones = uniqueSorted(state.clients.map(client => client.zone));
+    const types = uniqueSorted(state.clients.map(client => client.type));
 
     sellers.forEach(seller => dom.sellerFilter.add(new Option(formatSellerName(seller), seller)));
     macroZones.forEach(zone => dom.macroFilter.add(new Option(zone, zone)));
     zones.forEach(zone => dom.zoneFilter.add(new Option(zone, zone)));
     types.forEach(type => dom.typeFilter.add(new Option(type, type)));
+
+    state.clients.forEach(client => {
+        const popup = client.marker?.getPopup?.();
+        if (popup) {
+            popup.options.autoPan = true;
+            popup.options.keepInView = false;
+            popup.options.autoPanPaddingTopLeft = L.point(26, 26);
+            popup.options.autoPanPaddingBottomRight = L.point(26, 26);
+        }
+    });
 
     if (typeof refreshMacroZoneLayer === 'function') refreshMacroZoneLayer(state.clients);
 }
@@ -53,11 +77,16 @@ function restoreSession() {
 
 function openApp(user) {
     state.currentUser = user;
+    state.dashboardCommuneFilter = '';
+    state.hasFitInitialBounds = false;
+
     dom.loginScreen.classList.add('hidden');
     dom.app.classList.remove('hidden');
     dom.userName.textContent = user.displayName;
     dom.userInitials.textContent = initials(user.displayName);
-    dom.userRole.textContent = user.role === 'admin' ? 'Administrador · Todos los vendedores' : formatSellerName(user.seller);
+    dom.userRole.textContent = user.role === 'admin'
+        ? 'Administrador · Todos los vendedores'
+        : formatSellerName(user.seller);
     dom.password.value = '';
 
     if (user.role === 'vendedor') {
@@ -70,16 +99,23 @@ function openApp(user) {
         dom.sellerFilter.value = '';
     }
 
-    setTimeout(() => {
-        map.invalidateSize();
-        applyFilters({ fit: true });
-    }, 100);
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            map.invalidateSize({ pan: false });
+            applyFilters({ fit: false });
+            fitClients(allowedClients(), { animate: false });
+            state.hasFitInitialBounds = true;
+        });
+    });
 }
 
 function logout() {
     sessionStorage.removeItem('mapaComercialUser');
     state.currentUser = null;
     state.hasFitInitialBounds = false;
+    state.dashboardCommuneFilter = '';
+    map.stop();
+    map.closePopup();
     markers.clearLayers();
     closeSidebar();
     dom.app.classList.add('hidden');
@@ -95,83 +131,117 @@ function allowedClients() {
     return state.clients.filter(client => client.seller === state.currentUser.seller);
 }
 
-function applyFilters(options = {}) {
-    const { fit = false } = options;
+function currentFilteredClients() {
     const query = normalizeText(dom.search.value);
     const seller = dom.sellerFilter.value;
     const macroZone = dom.macroFilter.value;
     const zone = dom.zoneFilter.value;
     const type = dom.typeFilter.value;
+    const commune = state.dashboardCommuneFilter;
 
-    const base = allowedClients();
-    const visible = base.filter(client => {
+    return allowedClients().filter(client => {
         const matchesSeller = state.currentUser.role === 'vendedor' || !seller || client.seller === seller;
         const matchesMacroZone = !macroZone || client.macroZone === macroZone;
         const matchesZone = !zone || client.zone === zone;
         const matchesType = !type || client.type === type;
+        const matchesCommune = !commune || `Comuna ${client.commune}` === commune;
         const matchesQuery = !query || client.searchText.includes(query);
-        return matchesSeller && matchesMacroZone && matchesZone && matchesType && matchesQuery;
+        return matchesSeller && matchesMacroZone && matchesZone && matchesType && matchesCommune && matchesQuery;
     });
+}
+
+function applyFilters(options = {}) {
+    const { fit = false, openSinglePopup = false } = options;
+    const base = allowedClients();
+    const visible = currentFilteredClients();
 
     state.visibleClients = visible;
+    map.stop();
+    map.closePopup();
     markers.clearLayers();
     markers.addLayers(visible.map(client => client.marker));
     updateDashboard(base, visible);
 
     dom.mapLoading.classList.add('hidden');
     const warningText = state.dataWarnings.length ? ` · ${state.dataWarnings.length} registro(s) omitido(s)` : '';
-    dom.mapStatus.innerHTML = `<span class="status-dot"></span><span>${visible.length.toLocaleString('es-CO')} de ${base.length.toLocaleString('es-CO')} puntos visibles${warningText}</span>`;
+    const actionText = fit ? '' : ' · Pulsa “Ver resultados” para centrar';
+    dom.mapStatus.innerHTML = `<span class="status-dot"></span><span>${visible.length.toLocaleString('es-CO')} de ${base.length.toLocaleString('es-CO')} puntos visibles${warningText}${actionText}</span>`;
 
-    if (fit || !state.hasFitInitialBounds) {
-        fitClients(visible.length ? visible : base, { openSinglePopup: visible.length === 1 });
-        state.hasFitInitialBounds = true;
+    if (fit) {
+        fitClients(visible.length ? visible : base, { openSinglePopup, animate: false });
     }
 }
 
-function fitOptionsForCount(count) {
-    const mobile = window.innerWidth <= 920;
-    let maxZoom = 11;
-    if (count <= 1) maxZoom = 15;
-    else if (count <= 3) maxZoom = 14;
-    else if (count <= 10) maxZoom = 13;
-    else if (count <= 35) maxZoom = 12;
+function fitProfile(clients) {
+    const count = clients.length;
+    const latitudes = clients.map(client => client.lat);
+    const longitudes = clients.map(client => client.lon);
+    const latSpan = Math.max(...latitudes) - Math.min(...latitudes);
+    const lonSpan = Math.max(...longitudes) - Math.min(...longitudes);
+    const span = Math.max(latSpan, lonSpan);
 
-    return {
-        paddingTopLeft: [mobile ? 34 : 58, mobile ? 145 : 82],
-        paddingBottomRight: [mobile ? 34 : 58, mobile ? 72 : 64],
-        maxZoom,
-        animate: true,
-        duration: 0.55
-    };
-}
-
-function fitBoundsSafely(bounds, count) {
-    if (!bounds || !bounds.isValid()) {
-        map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
-        return;
-    }
-    map.flyToBounds(bounds.pad(count <= 3 ? 0.22 : 0.08), fitOptionsForCount(count));
+    if (count === 1) return { zoom: 16, maxZoom: 16 };
+    if (span > 0.15 || count > 180) return { maxZoom: 12.5 };
+    if (span > 0.09 || count > 80) return { maxZoom: 13 };
+    if (span > 0.05 || count > 35) return { maxZoom: 13.5 };
+    if (span > 0.025 || count > 12) return { maxZoom: 14 };
+    if (count > 4) return { maxZoom: 14.5 };
+    return { maxZoom: 15 };
 }
 
 function fitClients(clients, options = {}) {
-    const { openSinglePopup = false } = options;
+    const { openSinglePopup = false, animate = false } = options;
+    map.stop();
+    map.closePopup();
+
     if (!clients.length) {
-        map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+        map.setView(DEFAULT_CENTER, 12.5, { animate: false });
         return;
     }
 
+    const profile = fitProfile(clients);
     if (clients.length === 1) {
         const client = clients[0];
-        if (openSinglePopup) map.once('moveend', () => client.marker.openPopup());
-        map.flyTo([client.lat, client.lon], 15, { animate: true, duration: 0.55 });
+        map.setView([client.lat, client.lon], profile.zoom, { animate });
+        if (openSinglePopup) {
+            setTimeout(() => client.marker.openPopup(), 80);
+        }
         return;
     }
 
-    fitBoundsSafely(L.latLngBounds(clients.map(client => [client.lat, client.lon])), clients.length);
+    const bounds = L.latLngBounds(clients.map(client => [client.lat, client.lon]));
+    if (!bounds.isValid()) {
+        map.setView(DEFAULT_CENTER, 12.5, { animate: false });
+        return;
+    }
+
+    const mobile = window.innerWidth <= 920;
+    map.fitBounds(bounds, {
+        padding: mobile ? [24, 24] : [42, 42],
+        maxZoom: profile.maxZoom,
+        animate
+    });
+}
+
+function updateZoneChoices() {
+    const current = dom.zoneFilter.value;
+    const selectedMacro = dom.macroFilter.value;
+    const selectedSeller = dom.sellerFilter.value;
+
+    let source = allowedClients();
+    if (state.currentUser.role === 'admin' && selectedSeller) {
+        source = source.filter(client => client.seller === selectedSeller);
+    }
+    if (selectedMacro) source = source.filter(client => client.macroZone === selectedMacro);
+
+    const zones = uniqueSorted(source.map(client => client.zone));
+    clearDynamicOptions(dom.zoneFilter);
+    zones.forEach(zone => dom.zoneFilter.add(new Option(zone, zone)));
+    dom.zoneFilter.value = zones.includes(current) ? current : '';
 }
 
 function updateDashboard(base, visible) {
-    const uniqueClients = new Set(base.map(client => normalizeText(client.nit))).size;
+    const uniqueClients = new Set(visible.map(client => normalizeText(client.nit))).size;
     const neighborhoods = new Set(visible.map(client => normalizeText(client.neighborhood)).filter(Boolean)).size;
     const communes = new Set(visible.map(client => client.commune).filter(Boolean)).size;
     const zones = new Set(visible.map(client => client.zone).filter(Boolean)).size;
@@ -229,10 +299,17 @@ function renderStats(container, values, colors, onClick, formatter = value => va
 
 function setFilter(filter, value) {
     if (filter === 'type') dom.typeFilter.value = value;
-    if (filter === 'macroZone') dom.macroFilter.value = value;
+    if (filter === 'macroZone') {
+        dom.macroFilter.value = value;
+        updateZoneChoices();
+    }
     if (filter === 'zone') dom.zoneFilter.value = value;
-    if (filter === 'seller' && state.currentUser.role === 'admin') dom.sellerFilter.value = value;
-    if (filter === 'commune') dom.search.value = value;
+    if (filter === 'seller' && state.currentUser.role === 'admin') {
+        dom.sellerFilter.value = value;
+        updateZoneChoices();
+    }
+    if (filter === 'commune') state.dashboardCommuneFilter = value;
+
     applyFilters({ fit: true });
     if (window.innerWidth <= 920) closeSidebar();
 }
@@ -243,7 +320,9 @@ function resetFilters() {
     dom.zoneFilter.value = '';
     dom.typeFilter.value = '';
     dom.sellerFilter.value = state.currentUser.role === 'vendedor' ? state.currentUser.seller : '';
-    applyFilters({ fit: true });
+    state.dashboardCommuneFilter = '';
+    updateZoneChoices();
+    applyFilters({ fit: false });
 }
 
 function locateUser() {
@@ -254,10 +333,17 @@ function locateUser() {
     dom.locateMe.disabled = true;
     navigator.geolocation.getCurrentPosition(position => {
         const location = [position.coords.latitude, position.coords.longitude];
-        map.flyTo(location, 15, { animate: true, duration: 0.55 });
-        L.circleMarker(location, { radius: 8, color: '#c8102e', fillColor: '#ffffff', fillOpacity: 1, weight: 4 })
+        map.stop();
+        map.setView(location, 15.5, { animate: false });
+        L.circleMarker(location, {
+            radius: 8,
+            color: '#c8102e',
+            fillColor: '#ffffff',
+            fillOpacity: 1,
+            weight: 4
+        })
             .addTo(map)
-            .bindPopup('Tu ubicación aproximada')
+            .bindPopup('Tu ubicación aproximada', { autoPanPadding: [24, 24] })
             .openPopup();
         dom.locateMe.disabled = false;
     }, () => {
@@ -276,22 +362,30 @@ function closeSidebar() {
     dom.sidebarBackdrop.classList.remove('open');
 }
 
-markers.options.zoomToBoundsOnClick = false;
-markers.on('clusterclick', event => {
-    const count = event.layer.getChildCount();
-    fitBoundsSafely(event.layer.getBounds(), count);
-});
-
 let searchTimer;
 dom.search.addEventListener('input', () => {
     clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => applyFilters(), 220);
+    searchTimer = setTimeout(() => applyFilters({ fit: false }), 220);
 });
 
-dom.sellerFilter.addEventListener('change', () => applyFilters({ fit: true }));
-dom.macroFilter.addEventListener('change', () => applyFilters({ fit: true }));
-dom.zoneFilter.addEventListener('change', () => applyFilters({ fit: true }));
-dom.typeFilter.addEventListener('change', () => applyFilters({ fit: true }));
+dom.sellerFilter.addEventListener('change', () => {
+    state.dashboardCommuneFilter = '';
+    updateZoneChoices();
+    applyFilters({ fit: false });
+});
+dom.macroFilter.addEventListener('change', () => {
+    state.dashboardCommuneFilter = '';
+    updateZoneChoices();
+    applyFilters({ fit: false });
+});
+dom.zoneFilter.addEventListener('change', () => {
+    state.dashboardCommuneFilter = '';
+    applyFilters({ fit: false });
+});
+dom.typeFilter.addEventListener('change', () => {
+    state.dashboardCommuneFilter = '';
+    applyFilters({ fit: false });
+});
 
 dom.loginForm.addEventListener('submit', handleLogin);
 dom.showPassword.addEventListener('click', () => {
@@ -301,10 +395,13 @@ dom.showPassword.addEventListener('click', () => {
 });
 dom.resetFilters.addEventListener('click', resetFilters);
 dom.fitVisible.addEventListener('click', () => {
-    fitClients(state.visibleClients, { openSinglePopup: state.visibleClients.length === 1 });
+    fitClients(state.visibleClients.length ? state.visibleClients : allowedClients(), {
+        openSinglePopup: state.visibleClients.length === 1,
+        animate: false
+    });
     if (window.innerWidth <= 920) closeSidebar();
 });
-dom.fitAll.addEventListener('click', () => fitClients(allowedClients()));
+dom.fitAll.addEventListener('click', () => fitClients(allowedClients(), { animate: false }));
 dom.locateMe.addEventListener('click', locateUser);
 dom.logoutButton.addEventListener('click', logout);
 dom.openSidebar.addEventListener('click', openSidebar);
@@ -312,8 +409,8 @@ dom.closeSidebar.addEventListener('click', closeSidebar);
 dom.sidebarBackdrop.addEventListener('click', closeSidebar);
 map.on('click', () => { if (window.innerWidth <= 920) closeSidebar(); });
 window.addEventListener('resize', () => {
-    map.invalidateSize();
-    if (state.currentUser && state.visibleClients.length) fitClients(state.visibleClients);
+    map.stop();
+    map.invalidateSize({ pan: false });
 });
 
 loadData();
